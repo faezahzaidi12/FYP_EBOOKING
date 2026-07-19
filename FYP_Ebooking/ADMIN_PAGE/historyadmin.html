@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>ADMIN PANEL | ROBLO-BOOK</title>
+    <!-- Framework & Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Link ke fail CSS (Pastikan susunan ini betul) -->
+    <link rel="stylesheet" href="/USER_PAGE/style_index.css"> <!-- Guna warna/root sedia ada -->
+    <link rel="stylesheet" href="style_admin.css">  <!-- Guna hiasan khas admin -->
+</head>
+<body style="background-color: #e3e3e0;">
+
+    <nav class="navbar navbar-dark p-3 shadow" style="background-color: #202225; border-bottom: 5px solid var(--roblox-red);">
+        <div class="container-fluid text-uppercase">
+            <span class="navbar-brand font-bungee text-danger"><i class="bi bi-shield-shaded"></i> ADMIN COMMAND CENTER</span>
+            <button class="btn btn-primary btn-sm font-bungee border-2 border-white" onclick="window.location.href='home_admin.html'">EXIT SERVER</button>
+        </div>
+    </nav>
+
+    <div class="container mt-4 pb-5">
+
+        <!-- DATA PENYATAAN -->
+        <div class="row g-3 mb-4 text-uppercase text-center">
+            <div class="col-md-4">
+                <div class="col-lg-12 button stat-card bg-success text-white p-3">
+                    <small class="fw-bold">Active Players</small>
+                    <h2 class="font-bungee mb-0">24</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="col-lg-12 button stat-card bg-dark text-white p-3">
+                    <small class="fw-bold">Blocked Users</small>
+                    <h2 class="font-bungee mb-0">3</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="col-lg-12 button stat-card bg-danger text-white p-3">
+                    <small class="fw-bold">Auto-Terminated</small>
+                    <h2 class="font-bungee mb-0">12</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. SEARCH BAR -->
+        <div class="card p-3 mb-4 border-4 border-dark shadow-sm">
+            <div class="input-group">
+                <span class="input-group-text bg-dark text-white border-0 rounded-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchInput" class="form-control form-control-rbx" placeholder="SEARCH PLAYER BY NAME..." onkeyup="filterUsers()">
+            </div>
+        </div>
+
+        <h3 class="font-bungee mb-3 text-uppercase"><i class="bi bi-people-fill"></i> User Database</h3>
+        
+        <div class="table-responsive">
+            <table class="table table-roblox align-middle text-uppercase" id="userTable">
+                <thead>
+                    <tr class="text-center">
+                        <th>Avatar</th>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th>Latest Activity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="fw-bold">
+                    <!-- Data ditarik melalui JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL: DETAIL & HISTORY -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content modal-content-rbx">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title font-bungee text-uppercase">Player Dossier</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Profil Maklumat -->
+                        <div class="col-md-5 border-end border-3 border-dark">
+                            <div class="text-center mb-3">
+                                <div id="modalAvatar" style="width: 100px; margin: 0 auto; border: 4px solid black;"></div>
+                                <h4 class="font-bungee mt-2" id="modalUsername">---</h4>
+                            </div>
+                            <div class="bg-warning text-dark p-1 text-center fw-bold small mb-2 border-2 border-dark">REGISTRATION INFO</div>
+                            <div class="small fw-bold">
+                                <p class="mb-1">FULL NAME: <br><span class="text-primary" id="mFullname">---</span></p>
+                                <p class="mb-1">IC NUMBER: <br><span class="text-primary" id="mIC">---</span></p>
+                                <p class="mb-1">EMAIL: <br><span class="text-primary" id="mEmail">---</span></p>
+                                <p class="mb-0">PHONE: <br><span class="text-primary" id="mPhone">---</span></p>
+                            </div>
+                        </div>
+                        <!-- Rekod Tempahan -->
+                        <div class="col-md-7">
+                            <div class="bg-danger text-white p-1 text-center fw-bold small mb-2 border-2 border-dark font-bungee">BOOKING HISTORY</div>
+                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                <table class="table history-mini-table table-sm">
+                                    <thead class="table-dark small">
+                                        <tr>
+                                            <th>Room</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mHistoryBody" class="small fw-bold"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button class="btn btn-roblox btn-danger w-100" onclick="confirm('BLOCK THIS PLAYER?')">BLOCK PLAYER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Logik JS tetap di sini supaya senang Isma nak edit data
+        const mockUsers = [
+            {
+                id: 1, name: "ALI BIN ABU", user: "ALI_TECH", email: "ali@ikm.edu.my", ic: "030201-11-1234", phone: "011-5556677", status: "YEAR 2",
+                history: [
+                    { room: "BK1", date: "15/06", time: "08:15", stat: "SUCCESS" },
+                    { room: "BK2", date: "12/06", time: "10:15", stat: "TERMINATED" }
+                ]
+            },
+            {
+                id: 2, name: "SITI NUR ISMA", user: "ISMA_PRO", email: "isma@ikm.edu.my", ic: "040101-11-9988", phone: "019-2223344", status: "YEAR 1",
+                history: [
+                    { room: "BK1", date: "18/06", time: "14:00", stat: "SUCCESS" },
+                    { room: "BK3", date: "17/06", time: "09:15", stat: "SUCCESS" }
+                ]
+            }
+        ];
+
+        function loadUserTable() {
+            const tbody = document.querySelector('#userTable tbody');
+            tbody.innerHTML = mockUsers.map(u => `
+                <tr class="player-row" onclick="inspectUser(${u.id})">
+                    <td class="text-center"><img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=${u.user}" width="35"></td>
+                    <td>${u.user}</td>
+                    <td class="text-center"><span class="badge bg-primary">${u.status}</span></td>
+                    <td class="text-center small">${u.history[0].date} @ ${u.history[0].time}</td>
+                    <td class="text-center"><button class="btn btn-sm btn-dark"><i class="bi bi-eye"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function filterUsers() {
+            let input = document.getElementById('searchInput').value.toUpperCase();
+            let rows = document.querySelector("#userTable tbody").rows;
+            for (let i = 0; i < rows.length; i++) {
+                let name = rows[i].cells[1].innerText;
+                rows[i].style.display = name.toUpperCase().includes(input) ? "" : "none";
+            }
+        }
+
+        function inspectUser(id) {
+            const u = mockUsers.find(user => user.id === id);
+            document.getElementById('modalAvatar').innerHTML = `<img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=${u.user}" style="width: 100%;">`;
+            document.getElementById('modalUsername').innerText = u.user;
+            document.getElementById('mFullname').innerText = u.name;
+            document.getElementById('mEmail').innerText = u.email;
+            document.getElementById('mIC').innerText = u.ic;
+            document.getElementById('mPhone').innerText = u.phone;
+            document.getElementById('mHistoryBody').innerHTML = u.history.map(h => `
+                <tr>
+                    <td>${h.room}</td>
+                    <td>${h.date}</td>
+                    <td>${h.time}</td>
+                    <td><span class="status-badge ${h.stat === 'SUCCESS' ? 'bg-success text-white' : 'bg-danger text-white'}">${h.stat}</span></td>
+                </tr>
+            `).join('');
+            new bootstrap.Modal(document.getElementById('userModal')).show();
+        }
+
+        window.onload = loadUserTable;
+    </script>
+</body>
+</html>
