@@ -1,15 +1,28 @@
 /* admin_home.css */
 
 body {
-    background-color: #f4f7f6 !important; /* Warna kelabu cair yang bersih */
+    background-color: #9c9c9c !important; /* Warna kelabu cair yang bersih */
+    background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); /* Texture blok halus */
+    background-attachment: fixed;
 }
-
 /* Banner Selamat Datang */
 .welcome-banner {
     background: white;
-    border-radius: 20px; /* Bucu bulat sikit biar mesra */
+    border-radius: 20px; 
     border: 4px solid #393B3D;
     box-shadow: 8px 8px 0px #393B3D;
+}
+
+/* --- FIX NAVBAR ADMIN --- */
+.navbar {
+    background-color: #393B3D !important; /* Warna kelabu gelap Roblox */
+    border-bottom: 5px solid var(--roblox-blue) !important; /* Garis bawah biru */
+    padding: 15px 0 !important;
+}
+
+/* Pastikan tulisan ADMIN HUB warna putih */
+.navbar-brand {
+    color: white !important;
 }
 
 .admin-avatar-v2 {
@@ -20,7 +33,6 @@ body {
     background: white;
 }
 
-/* Base Style untuk Menu Tile */
 .menu-tile {
     background: white;
     padding: 30px 15px;

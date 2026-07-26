@@ -5,7 +5,7 @@
     <title>SIGN UP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/USER_PAGE/style_index.css">
+    <link rel="stylesheet" href="/FYP_EBOOKING-main/FYP_Ebooking/USER_PAGE/style_index.css">
 
     <!-- REQUIRED: Supabase JS SDK. Must load before your own script below. -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,39 +14,39 @@
     <div class="roblox-card text-uppercase">
         <h2 class="font-bungee text-center mb-4 text-dark">SIGN UP</h2>
         <div class="inner-container">
-        <label class="fw-bold small">USERNAME :</label>
-        <input type="text" id="username" class="form-control mb-3" placeholder="FULLNAME">
+            <label class="fw-bold small">USERNAME :</label>
+            <input type="text" id="username" class="form-control mb-3" placeholder="FULLNAME">
 
-        <!-- IC Label dengan contoh kelabu halus -->
-        <label class="fw-bold small">
-            IC NUMBER :
-            <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;">(example: 123456-12-1234)</span>
-        </label>
-        <!-- Ditambah maxlength="14" dan oninput untuk auto-format sempang -->
-        <input type="text" id="icNumber" class="form-control mb-3" placeholder="123456-12-1234" maxlength="14" oninput="formatIC(this)">
+            <!-- IC Label dengan contoh kelabu halus -->
+            <label class="fw-bold small">
+                IC NUMBER :
+                <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;">(example: 123456-12-1234)</span>
+            </label>
+            <!-- Auto-format sempang menggunakan fungsi formatIC -->
+            <input type="text" id="icNumber" class="form-control mb-3" placeholder="123456-12-1234" maxlength="14" oninput="formatIC(this)">
 
-          <div class="mb-3">
-                        <label class="fw-bold small">SUBJECT:</label>
-                         <select id="mSubject" class="form-select border-3 border-dark fw-bold text-center">
-                            <option value="" selected disabled hidden></option> 
-                            <option value="DFK">DIPLOMA IN TECHNOLOGY COMPUTER</option>
-                            <option value="DGA">DIPLOMA IN TECHNOLOGY AUTOMOTIVE</option>
-                            <option value="ITW">DIPLOMA IN WELDING COMPETENCY</option>
-                            <option value="PPU">DIPLOMA IN WELDING COMPETENCY</option>
-                            <option value="DCG">DIPLOMA IN WELDING COMPETENCY</option>
-                            <option value="SLR">CERTIFICATE IN MECHANICAL ENGINEERING TECHNOLOGY</option>
-                        </select>
-                    </div>
+            <div class="mb-3">
+                <label class="fw-bold small">COURSE:</label>
+                <select id="mCourse" class="form-select border-3 border-dark fw-bold text-center">
+                    <option value="" selected disabled hidden></option> 
+                    <option value="DFK">DIPLOMA IN TECHNOLOGY COMPUTER</option>
+                    <option value="DGA">DIPLOMA IN TECHNOLOGY AUTOMOTIVE</option>
+                    <option value="ITW">DIPLOMA IN WELDING COMPETENCY</option>
+                    <option value="PPU">DIPLOMA IN WELDING COMPETENCY</option>
+                    <option value="DCG">DIPLOMA IN WELDING COMPETENCY</option>
+                    <option value="SLR">CERTIFICATE IN MECHANICAL ENGINEERING TECHNOLOGY</option>
+                </select>
+            </div>
 
-        <label class="fw-bold small">EMAIL :</label>
-        <input type="email" id="email" class="form-control mb-3" placeholder="EMAIL">
+            <label class="fw-bold small">EMAIL :</label>
+            <input type="email" id="email" class="form-control mb-3" placeholder="EMAIL">
 
-        <!-- Password Label dengan contoh kelabu halus -->
-        <label class="fw-bold small">
-            CREATE PASSWORD :
-            <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;"><p>(minimum 8 characters)</p></span>
-        </label>
-        <input type="password" id="password" class="form-control mb-3" placeholder="PASSWORD">
+            <!-- Password Label dengan contoh kelabu halus -->
+            <label class="fw-bold small">
+                CREATE PASSWORD :
+                <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;"><p>(minimum 8 characters)</p></span>
+            </label>
+            <input type="password" id="password" class="form-control mb-3" placeholder="PASSWORD">
         </div>
 
         <button class="btn btn-roblox btn-success w-100 py-2 fs-5 mb-3" onclick="registerUser()">DONE</button>
@@ -63,10 +63,8 @@
 
         // FUNGSI AUTO-FORMAT IC (000000-00-0000)
         function formatIC(input) {
-            // Buang semua aksara bukan nombor
             let value = input.value.replace(/\D/g, '');
 
-            // Masukkan tanda sempang secara automatik mengikut susunan IC Malaysia
             if (value.length > 6) {
                 value = value.slice(0, 6) + '-' + value.slice(6);
             }
@@ -77,13 +75,14 @@
         }
 
         async function registerUser() {
-            const username = document.getElementById('username').value;
-            const icNumber = document.getElementById('icNumber').value;
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value.trim();
+            const icNumber = document.getElementById('icNumber').value.trim();
+            const course = document.getElementById('mCourse').value; // DIKEMASKINI: Ditukar dari mSubject ke mCourse! [33]
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
 
             // 1. Pastikan semua ruangan diisi
-            if (!username || !icNumber || !email || !password) {
+            if (!username || !icNumber || !course || !email || !password) {
                 alert("PLEASE FILL ALL FIELDS!");
                 return;
             }
@@ -106,8 +105,10 @@
                 password: password,
                 options: {
                     data: {
-                        username: username,
-                        ic_number: icNumber
+                        display_name: username, // Memaparkan di ruangan "Display Name" Supabase Auth [1.1.3]
+                        full_name: username,
+                        ic_number: icNumber,
+                        subject: course
                     }
                 }
             });

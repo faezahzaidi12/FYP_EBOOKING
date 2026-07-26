@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DFK 1</title>
+    <title>LITERASI 2</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
         <div class="container text-uppercase">
             <a class="navbar-brand font-bungee" href="#"><i class="bi bi-box-seam-fill"></i> MYTVETMARA BESUT e-BOOKING</a>
             <div class="d-flex align-items-center text-white fw-bold">
-                <a href="libraryroom.html" class="btn btn-primary btn-sm ms-3 font-bungee border-2 border-white">BACK</a>
+                <a href="libraryselection.html" class="btn btn-primary btn-sm ms-3 font-bungee border-2 border-white">BACK</a>
             </div>
         </div>
     </nav>
@@ -76,7 +76,8 @@
                     </thead>
                     <tbody id="timetableBody">
                         <script>
-                            const days = ["SUNDAY", "MONDAY", "TEUSDAY", "WEDNESDAY", "THURSDAY"];
+                            // DIKEMASKINI: Ejaan TUESDAY [22]
+                            const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"];
                             days.forEach(day => {
                                 document.write(`<tr>`);
                                 document.write(`<td class="sticky-col fw-bold text-center border-2 border-dark bg-info text-dark font-bungee" style="vertical-align: middle;">${day}</td>`);
@@ -96,14 +97,19 @@
         </div>
     </div>
 
-    <!--GAMBAR BILIK -->
+    <!-- GAMBAR BILIK -->
     <div class="modal fade" id="photoModal">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-5 border-dark rounded-0">
-                <div class="modal-header bg-success text-white border-0"><h5 class="modal-title font-bungee">DFK1 ROOM'S PHOTO</h5></div>
+                <div class="modal-header bg-success text-white border-0">
+                    <h5 class="modal-title font-bungee">LITERASI 2 ROOM'S PHOTO</h5>
+                </div>
                 <div class="modal-body text-center bg-light">
                     <img src="https://media.architecturaldigest.com/photos/573489112959663327663f7d/16:9/w_2560%2Cc_limit/modern-office-spaces-01.jpg" 
-                         class="img-fluid border-4 border-dark shadow" alt="Bilik DFK 1">
+                         class="img-fluid border-4 border-dark shadow" alt="Bilik LITERASI 2">
+                </div>
+                <div class="modal-footer border-0">
+                    <button class="btn btn-roblox btn-dark w-100" data-bs-dismiss="modal">CLOSE</button>
                 </div>
             </div>
         </div>
@@ -128,7 +134,8 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="fw-bold small text-dark">END CLASS:</label>
+                        <!-- DIKEMASKINI: Mengikut label END OF SESSION [18] -->
+                        <label class="fw-bold small text-dark">END OF SESSION:</label>
                         <select id="mEnd" class="form-select border-3 border-dark fw-bold text-center"></select>
                     </div>
                     <div class="mb-3">
@@ -145,24 +152,8 @@
                         <input type="text" id="mLecturer" class="form-control border-2 border-dark" placeholder="LECTURER NAME">
                     </div>
                 </div>
-                <div class="modal-footer border-0"><button class="btn btn-roblox btn-success w-100 py-2 fs-5" onclick="processBooking()">PROCEED</button></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- INFO & CANCEL -->
-    <div class="modal fade" id="infoModal">
-        <div class="modal-dialog text-uppercase">
-            <div class="modal-content border-5 border-dark rounded-0 text-center">
-                <div class="modal-header bg-dark text-white border-0"><h5 class="modal-title font-bungee w-100">INFORMATION</h5></div>
-                <div class="modal-body py-4">
-                    <h2 class="font-bungee text-danger mb-0" id="infoBooker">NAME:</h2>
-                    <div class="text-start bg-light p-3 border-2 border-dark mt-3">
-                        <p class="mb-1"><strong>SUBJECT:</strong> <span id="infoSubject">---</span></p>
-                        <p class="mb-1"><strong>LECTURER:</strong> <span id="infoLecturer">---</span></p>
-                        <p class="mb-0"><strong>TIME:</strong> <span id="infoTimeRange">---</span></p>
-                    </div>
-                    <button class="btn btn-roblox btn-danger w-100 mt-4 py-3 fs-5" onclick="cancelBooking()">CANCEL BOOKING</button>
+                <div class="modal-footer border-0">
+                    <button class="btn btn-roblox btn-success w-100 py-2 fs-5" onclick="processBooking()">PROCEED</button>
                 </div>
             </div>
         </div>
@@ -184,32 +175,23 @@
                         <p class="mb-0"><strong>STATUS:</strong> <span id="infoStatus" class="fw-bold">---</span></p>
                     </div>
                     
-                    <!-- Butang Check-In Baru (Warna Hijau) [18] -->
                     <button id="btnCheckIn" class="btn btn-roblox btn-success w-100 mt-4 py-3 fs-5" onclick="checkInBooking()">CONFIRM & CHECK-IN NOW</button>
-                    
-                    <!-- Butang Cancel (Warna Merah) -->
                     <button class="btn btn-roblox btn-danger w-100 mt-2 py-3 fs-5" onclick="cancelBooking()">CANCEL BOOKING</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Masukkan Supabase CDN ke dalam HTML -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Bootstrap JS & Supabase Backend CENTRAL [33] -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../displayname.js"></script>
     <script>
-        // ==========================================
-        // 1. CONFIGURATION BACKEND (KUNCI SAMBUNGAN)
-        // ==========================================
-        const supabaseUrl = 'https://doyyrhhscdpchuvpancq.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        // ====================================================================
+        // FRONTEND ENGINE: HUBUNGAN REAL-TIME DENGAN DISPLAYNAME.JS [33, 36]
+        // ====================================================================
 
-        // ===================================================
-        // 2. PEMBOLEH UBAH UTAMA
-        // ===================================================
-        const ROOM_NAME = "DFK 2"; 
+        const ROOM_NAME = "LITERASI 2"; // Nama bilik sepadan pangkalan data [35]
 
         let curDay = ""; 
         let curStartIdx = 0; 
@@ -217,30 +199,27 @@
         let currentActiveBookingId = null; 
         let bookingData = {}; 
 
-        // Ambil data user yang sedang login dari localStorage
+        // Dapatkan data login pengguna semasa
         let loggedInUser = localStorage.getItem('currentUser') || 'GUEST';
         let loggedInUserId = localStorage.getItem('currentUserId') || null;
 
-        // Jalankan fungsi tarik data sebaik sahaja halaman dimuatkan
+        // Tarik data sebaik sahaja halaman dibuka
         window.onload = function() {
             fetchBookings();
-            checkUrlForExtension(); // DIKEMASKINI: Semak jika ada permintaan penambahan masa dari emel! [18, 46]
+            if (typeof checkUrlForExtension === "function") {
+                checkUrlForExtension(); 
+            }
         };
 
         function showRoomPhoto() { 
             new bootstrap.Modal(document.getElementById('photoModal')).show(); 
         }
 
-        // FUNGSI UNTUK TARIK DATA DARI DATABASE (SELECT) [1.1.3]
+        // Tarik data tempahan dari database [1.1.3, 33]
         async function fetchBookings() {
             resetTimetable(); 
 
-            // Menarik data bertaraf 'Pending' dan juga 'Checked-In'
-            const { data: bookings, error } = await _supabase
-                .from('bookings')
-                .select('*')
-                .eq('room_name', ROOM_NAME)
-                .in('status', ['Pending', 'Checked-In']); 
+            const { data: bookings, error } = await fetchBookingsFromDb(ROOM_NAME); 
 
             if (error) {
                 console.error("Gagal mengambil data bookings:", error);
@@ -266,8 +245,8 @@
                             startTime: startUI,
                             endTime: endUI,
                             status: b.status,
-                            date: b.booking_date,      // Menyimpan tarikh asal [1.1.2]
-                            startTimeRaw: b.start_time // Menyimpan masa 24 jam asal [1.1.2]
+                            date: b.booking_date,      
+                            startTimeRaw: b.start_time 
                         };
                         const cell = document.getElementById(key);
                         if (cell) {
@@ -302,7 +281,6 @@
                 document.getElementById('infoLecturer').innerText = data.lecturer;
                 document.getElementById('infoTimeRange').innerText = data.startTime + " - " + data.endTime;
                 
-                // Paparkan status di dalam modal
                 const statusSpan = document.getElementById('infoStatus');
                 statusSpan.innerText = data.status;
                 
@@ -311,11 +289,10 @@
                 
                 if (data.status === 'Checked-In') {
                     statusSpan.className = "text-success fw-bold";
-                    btnCheckIn.style.display = 'none'; // Sembunyikan jika sudah check-in [18]
+                    btnCheckIn.style.display = 'none'; 
                 } else {
                     statusSpan.className = "text-warning fw-bold";
                     
-                    // Hanya aktifkan butang check-in jika waktu sekarang berada dalam tingkap 15 minit [18, 45]
                     if (isWindowActive) {
                         btnCheckIn.style.display = 'block'; 
                         btnCheckIn.removeAttribute('disabled');
@@ -323,7 +300,7 @@
                         btnCheckIn.innerText = "CONFIRM & CHECK-IN NOW";
                     } else {
                         btnCheckIn.style.display = 'block'; 
-                        btnCheckIn.setAttribute('disabled', 'true'); // Matikan butang jika luar waktu! [18]
+                        btnCheckIn.setAttribute('disabled', 'true'); 
                         btnCheckIn.className = "btn btn-roblox btn-secondary w-100 mt-4 py-3 fs-5 text-white";
                         btnCheckIn.innerText = "CHECK-IN NOT AVAILABLE YET";
                     }
@@ -348,7 +325,7 @@
             }
         }
 
-        // FUNGSI HANTAR TEMPAHAN BARU KE DATABASE (INSERT) [1.1.3]
+        // Hantar tempahan baharu melalui displayname.js [1.1.3, 33]
         async function processBooking() {
             const endVal = document.getElementById('mEnd').value;
             const subVal = document.getElementById('mSubject').value;
@@ -361,22 +338,17 @@
 
             const formattedDate = formattedDateString(curDay);
 
-            const { data, error } = await _supabase
-                .from('bookings')
-                .insert([
-                    {
-                        user_id: loggedInUserId, 
-                        room_name: ROOM_NAME, 
-                        booked_by: loggedInUser,
-                        booking_date: formattedDate, 
-                        booking_day: curDay,
-                        start_time: convertTo24Hour(document.getElementById('mStart').value),
-                        end_time: convertTo24Hour(endVal),
-                        subject: subVal,
-                        lecturer: lecVal,
-                        status: 'Pending' 
-                    }
-                ]);
+            const { data, error } = await insertNewBooking(
+                loggedInUserId, 
+                loggedInUser, 
+                ROOM_NAME, 
+                formattedDate, 
+                curDay, 
+                convertTo24Hour(document.getElementById('mStart').value), 
+                convertTo24Hour(endVal), 
+                subVal, 
+                lecVal
+            );
 
             if (error) {
                 alert("Tempahan Gagal: " + error.message);
@@ -388,30 +360,24 @@
             }
         }
 
-        // FUNGSI PENGESAHAN KEHADIRAN (UPDATE STATUS -> CHECKED-IN) [18, 45]
+        // Sahkan kehadiran melalui displayname.js [18, 33, 45]
         async function checkInBooking() {
-            const { error } = await _supabase
-                .from('bookings')
-                .update({ status: 'Checked-In' })
-                .eq('id', currentActiveBookingId);
+            const { error } = await updateBookingToCheckIn(currentActiveBookingId);
 
             if (error) {
                 alert("Check-In Gagal: " + error.message);
             } else {
                 alert("CHECK-IN SUCCESSFUL! ENJOY YOUR CLASS!");
                 bootstrap.Modal.getInstance(document.getElementById('infoModal')).hide();
-                fetchBookings(); // Refresh jadual
+                fetchBookings(); 
             }
         }
 
-        // FUNGSI BATAL TEMPAHAN (UPDATE STATUS KEPADA CANCELLED)
+        // Batal tempahan melalui displayname.js [33]
         async function cancelBooking() {
             if (!confirm("DO YOU WANT TO CANCEL THIS?")) return;
 
-            const { error } = await _supabase
-                .from('bookings')
-                .update({ status: 'Cancelled' })
-                .eq('id', currentActiveBookingId);
+            const { error } = await updateBookingToCancelled(currentActiveBookingId);
 
             if (error) {
                 alert("Pembatalan Gagal: " + error.message);
@@ -422,21 +388,19 @@
             }
         }
 
-        // DIKEMASKINI: Menerima isyarat pautan dari emel untuk penambahan masa [18, 45, 46]
+        // Terima pautan lanjutan masa dari emel [18, 33, 45, 46]
         async function checkUrlForExtension() {
             const urlParams = new URLSearchParams(window.location.search);
             const extendId = urlParams.get('extend_id');
-            const originalEndTime = urlParams.get('end_time'); // Contoh: "12:00"
+            const originalEndTime = urlParams.get('end_time'); 
             
             if (extendId && originalEndTime) {
-                // Bersihkan URL supaya parameter hilang selepas sekali semak [28]
                 window.history.replaceState({}, document.title, window.location.pathname);
                 
-                if (confirm(`DO YOU WANT TO EXTEND YOUR SESSION IN ROOM DFK 1 BY 1 HOUR?`)) {
-                    // Kira end_time baru (tambah 1 jam) [45]
+                if (confirm(`DO YOU WANT TO EXTEND YOUR SESSION IN ROOM ${ROOM_NAME} BY 1 HOUR?`)) {
                     const [hours, minutes] = originalEndTime.split(':');
                     let newHours = parseInt(hours) + 1;
-                    if (newHours >= 24) newHours = 0; // Handle midnight wrap-around
+                    if (newHours >= 24) newHours = 0; 
                     const newEndTime = `${String(newHours).padStart(2, '0')}:${minutes}:00`;
                     
                     const { error } = await _supabase
@@ -448,81 +412,10 @@
                         alert("Extension Failed: " + error.message);
                     } else {
                         alert("SESSION EXTENDED SUCCESSFULLY BY 1 HOUR!");
-                        fetchBookings(); // Refresh timetable!
+                        fetchBookings(); 
                     }
                 }
             }
-        }
-
-        // Penukaran masa 12 jam -> 24 jam
-        function convertTo24Hour(timeStr) {
-            const [time, modifier] = timeStr.split(' ');
-            let [hours, minutes] = time.split(':');
-            hours = parseInt(hours, 10);
-            if (hours === 12) hours = 0;
-            if (modifier === 'PM') hours += 12;
-            return `${hours.toString().padStart(2, '0')}:${minutes}:00`;
-        }
-
-        // Penukaran masa 24 jam -> 12 jam
-        function convertToUITime(dbTime) {
-            let [hours, minutes] = dbTime.split(':');
-            hours = parseInt(hours, 10);
-            let modifier = 'AM';
-            if (hours >= 12) {
-                modifier = 'PM';
-                if (hours > 12) hours -= 12;
-            }
-            if (hours === 0) hours = 12;
-            return `${hours}:${minutes} ${modifier}`;
-        }
-
-        // Mengira tarikh YYYY-MM-DD mengikut nama hari pada minggu semasa (DIKEMASKINI) [1.1.2]
-        function formattedDateString(dayName) {
-            const daysOfWeek = ["SUNDAY", "MONDAY", "TEUSDAY", "WEDNESDAY", "THURSDAY"];
-            const targetIdx = daysOfWeek.indexOf(dayName);
-            const today = new Date();
-            const currentIdx = today.getDay(); 
-            
-            let diff = targetIdx - currentIdx;
-            
-            if (diff < 0) {
-                diff += 7;
-            }
-            
-            const targetDate = new Date(today);
-            targetDate.setDate(today.getDate() + diff);
-            
-            const year = targetDate.getFullYear();
-            const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-            const date = String(targetDate.getDate()).padStart(2, '0');
-            
-            return `${year}-${month}-${date}`;
-        }
-
-        // Mengira sama ada tingkap masa 15 minit sebelum/selepas check-in sedang aktif [18, 45]
-        function isCheckInWindowActive(bookingDateStr, startTimeStr) {
-            const today = new Date();
-            
-            // Parse tarikh 'YYYY-MM-DD' secara manual untuk elak isu zon masa JavaScript [1.1.2]
-            const [year, month, day] = bookingDateStr.split('-');
-            const [hours, minutes] = startTimeStr.split(':');
-            
-            const bookingDateTime = new Date(
-                parseInt(year),
-                parseInt(month) - 1, // Bulan bermula dengan 0 di JS
-                parseInt(day),
-                parseInt(hours),
-                parseInt(minutes),
-                0,
-                0
-            );
-            
-            // Kira window: 15 minit sebelum hingga 15 minit selepas waktu mula [18, 45]
-            const windowStart = new Date(bookingDateTime.getTime() - 15 * 60 * 1000);
-            const windowEnd = new Date(bookingDateTime.getTime() + 15 * 60 * 1000);
-            
-            return (today >= windowStart && today <= windowEnd);
         }
     </script>
 </body>
