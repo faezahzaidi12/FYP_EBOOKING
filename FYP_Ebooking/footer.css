@@ -27,7 +27,7 @@
     var(--blue-base) 52px
   );
   color:var(--white);
-  padding:32px 0 28px;
+  padding:52px 0 46px;
   font-family:var(--footer-body);
 }
 
@@ -42,12 +42,12 @@
 .foot-col h4{
   font-family:var(--footer-body);
   font-weight:700;
-  font-size:11.5px;
-  letter-spacing:0.06em;
-  margin-bottom:14px;
+  font-size:13px;
+  letter-spacing:0.08em;
+  margin-bottom:22px;
 }
 .foot-col a{
-  font-size:12px;
+  font-size:13.5px;
   color:var(--white-soft);
   text-decoration:none;
   transition:color .2s ease;
@@ -71,25 +71,25 @@
 .crest-plate{
   background:var(--white);
   border-radius:8px;
-  padding:8px 14px;
+  padding:14px 22px;
   margin-bottom:14px;
   display:inline-block;
 }
 .crest-logo{
-  height:38px;
+  height:56px;
   width:auto;
   display:block;
 }
 .crest-address{
-  margin-top:8px;
-  font-size:11px;
+  margin-top:12px;
+  font-size:12.5px;
   color:var(--white-soft);
 }
 
 .bottom-bar{
   background:var(--black);
   color:var(--white-soft);
-  padding:10px 0;
+  padding:16px 0;
   position:relative;
   font-family:var(--footer-body);
 }
@@ -97,8 +97,8 @@
   display:flex;
   align-items:center;
   flex-wrap:wrap;
-  gap:6px 12px;
-  font-size:11px;
+  gap:8px 14px;
+  font-size:12.5px;
 }
 .bottom-inner .sep{ color:rgba(255,255,255,0.35); }
 .bottom-inner a{ color:var(--gold); text-decoration:none; transition:opacity .2s ease; }
