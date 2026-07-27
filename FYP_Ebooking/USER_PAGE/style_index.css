@@ -50,6 +50,22 @@ body {
     margin: 0 !important;
 }
 
+.roblox-cardR {
+    position: fixed !important;
+    top: 50% !important;            /* Tarik 50% dari atas */
+    left: 50% !important;           /* Tarik 50% dari kiri */
+    transform: translate(-50%, -50%) !important; /* Tolak balik separa saiz kad supaya center */
+    z-index: 9999 !important;       /* Terbang kat depan sekali */
+
+    width: 100% !important;
+    max-width: 450px !important;
+    background: white !important;
+    border: 6px solid #393B3D !important;
+    box-shadow: 12px 12px 0px rgba(0,0,0,0.5) !important;
+    padding: 35px !important;
+    margin: 0 !important;
+}
+
 .roblox-card1 {
     position: fixed !important;
     top: 50% !important;            /* Tarik 50% dari atas */
@@ -261,4 +277,20 @@ thead th {
     height: 100%;
     background: rgba(0, 0, 0, 0.4); /* Warna hitam 40% telus */
     z-index: -99;      /* Depan sikit dari video tapi belakang dari card */
+}
+
+/* --- PAKSA POP-UP MODAL DUDUK DI ATAS LAPISAN GELAP --- */
+.modal {
+    z-index: 99999 !important; /* Paksa kad aduan duduk paling depan */
+}
+
+.modal-backdrop {
+    z-index: 99990 !important; /* Lapisan gelap duduk di belakang kad */
+}
+
+/* Pastikan kandungan modal ada latar belakang putih yang jelas */
+.modal-content {
+    background-color: #ffffff !important;
+    position: relative;
+    z-index: 100000 !important;
 }
