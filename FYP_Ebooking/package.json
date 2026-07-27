@@ -1,0 +1,12 @@
+{
+  "name": "fyp-ebooking",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js",
+    "build": "rm -rf dist && cp -r FYP_Ebooking dist",
+    "build:dev": "rm -rf dist && cp -r FYP_Ebooking dist",
+    "start": "node server.js"
+  }
+}
+
