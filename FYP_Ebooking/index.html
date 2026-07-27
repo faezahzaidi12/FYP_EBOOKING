@@ -7,10 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <!-- Link ke style_index.css yang berada di dalam folder yang sama -->
-    <link rel="stylesheet" href="/FYP_EBOOKING-main/FYP_Ebooking/USER_PAGE/style_index.css">
+    <link rel="stylesheet" href="./style_index.css">
 
     <!-- REQUIRED: Supabase JS SDK. Must load sebelum fail inline script di bawah diimport [33] -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
 </head>
 <body>
      <!-- Video Background -->
@@ -44,12 +45,7 @@
     </div>
 
     <script>
-        // Masukkan URL dan Kunci Supabase Projek Awak
-        const supabaseUrl = 'https://doyyrhhscdpchuvpancq.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A';
-
-        // Inisialisasi sambungan Supabase [1.1.3]
-        const _supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const _supabase = window.supabaseClient || (window.supabase ? window.supabase.createClient('https://doyyrhhscdpchuvpancq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A') : null);
 
         // FUNGSI LOG MASUK UTAMA (LOGIN)
         async function doLogin() {
@@ -81,5 +77,31 @@
             }
         }
     </script>
-</body>
+    <script data-faq-loader="true">
+    (function () {
+        if (window.__faqChatbotLoaderBound) return;
+        window.__faqChatbotLoaderBound = true;
+
+        var candidates = ['./faq-chatbot.js', '../faq-chatbot.js', '../../faq-chatbot.js', '../../../faq-chatbot.js'];
+        var index = 0;
+
+        function tryLoad() {
+            if (index >= candidates.length) return;
+            var script = document.createElement('script');
+            script.src = candidates[index];
+            script.onload = function () {
+                if (window.__rbxFaqLoaded) {
+                    console.log('FAQ chatbot loaded');
+                }
+            };
+            script.onerror = function () {
+                index += 1;
+                tryLoad();
+            };
+            document.head.appendChild(script);
+        }
+
+        tryLoad();
+    })();
+    </script></body>
 </html>
