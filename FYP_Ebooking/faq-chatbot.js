@@ -93,6 +93,8 @@
   cursor: pointer;
   font-family: 'Bungee', cursive;
   transition: transform .12s ease, box-shadow .12s ease;
+  touch-action: none;
+  user-select: none;
 }
 
 #rbxFab:hover {
@@ -293,6 +295,70 @@
   const form = panel.querySelector('#rbxChatForm');
   const input = panel.querySelector('#rbxChatInput');
 
+  let dragActive = false;
+  let dragStarted = false;
+  let startX = 0;
+  let startY = 0;
+  let origX = 0;
+  let origY = 0;
+  let ignoreFabClick = false;
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function onFabDragStart(event) {
+    const point = event.type.startsWith('touch') ? event.touches[0] : event;
+    if (!point) return;
+    event.preventDefault();
+    dragActive = true;
+    dragStarted = false;
+    startX = point.clientX;
+    startY = point.clientY;
+    const rect = fab.getBoundingClientRect();
+    origX = rect.left;
+    origY = rect.top;
+    document.addEventListener('mousemove', onFabDragMove);
+    document.addEventListener('mouseup', onFabDragEnd);
+    document.addEventListener('touchmove', onFabDragMove, { passive: false });
+    document.addEventListener('touchend', onFabDragEnd);
+    document.addEventListener('touchcancel', onFabDragEnd);
+  }
+
+  function onFabDragMove(event) {
+    if (!dragActive) return;
+    const point = event.type.startsWith('touch') ? event.touches[0] : event;
+    if (!point) return;
+    event.preventDefault();
+    const deltaX = point.clientX - startX;
+    const deltaY = point.clientY - startY;
+    if (!dragStarted && Math.abs(deltaX) + Math.abs(deltaY) > 6) {
+      dragStarted = true;
+    }
+    if (!dragStarted) return;
+    const newLeft = clamp(origX + deltaX, 8, window.innerWidth - fab.offsetWidth - 8);
+    const newTop = clamp(origY + deltaY, 8, window.innerHeight - fab.offsetHeight - 8);
+    fab.style.position = 'fixed';
+    fab.style.left = newLeft + 'px';
+    fab.style.top = newTop + 'px';
+    fab.style.bottom = 'auto';
+    fab.style.right = 'auto';
+  }
+
+  function onFabDragEnd() {
+    if (!dragActive) return;
+    dragActive = false;
+    if (dragStarted) {
+      ignoreFabClick = true;
+      window.setTimeout(() => { ignoreFabClick = false; }, 0);
+    }
+    document.removeEventListener('mousemove', onFabDragMove);
+    document.removeEventListener('mouseup', onFabDragEnd);
+    document.removeEventListener('touchmove', onFabDragMove);
+    document.removeEventListener('touchend', onFabDragEnd);
+    document.removeEventListener('touchcancel', onFabDragEnd);
+  }
+
   function addMsg(text, who) {
     const m = document.createElement('div');
     m.className = 'rbx-msg ' + who;
@@ -335,7 +401,21 @@
   }
   function close() { panel.classList.remove('open'); }
 
-  fab.addEventListener('click', () => panel.classList.contains('open') ? close() : open());
+  fab.addEventListener('click', (event) => {
+    if (ignoreFabClick) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (dragStarted) {
+      // If a drag gesture occurred, do not toggle chat panel on release.
+      dragStarted = false;
+      return;
+    }
+    panel.classList.contains('open') ? close() : open();
+  });
+  fab.addEventListener('mousedown', onFabDragStart);
+  fab.addEventListener('touchstart', onFabDragStart, { passive: false });
   panel.querySelector('#rbxChatClose').addEventListener('click', close);
 
   form.addEventListener('submit', (e) => {
