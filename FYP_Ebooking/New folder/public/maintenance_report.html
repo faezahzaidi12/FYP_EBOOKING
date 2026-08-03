@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MAINTENANCE REPORT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+:root {
+    --bk-blue: #00A2FF;
+    --bk-green: #00E223;
+    --bk-red: #E2231A;
+    --bk-yellow: #FFC800;
+    --bk-dark: #393B3D;
+    --bk-bg: #e9ecf1;
+}
+* { box-sizing: border-box; }
+body {
+    background: var(--bk-bg);
+    font-family: 'Poppins', sans-serif;
+    color: var(--bk-dark);
+    margin: 0;
+    padding: 0 0 40px;
+}
+
+/* ---------- Navbar ---------- */
+.mr-nav {
+    background: var(--bk-dark);
+    color: #fff;
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 5px solid #000;
+    font-family: 'Bungee', cursive;
+}
+.mr-nav .brand { font-size: 1rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+.mr-nav .brand i { color: var(--bk-yellow); }
+
+.mr-wrap { max-width: 640px; margin: 30px auto 0; padding: 0 16px; }
+
+/* ---------- Buttons ---------- */
+.btn-rbx {
+    font-family: 'Bungee', cursive;
+    font-size: .72rem; letter-spacing: .5px;
+    border: 4px solid var(--bk-dark); border-radius: 0;
+    padding: 12px 16px; color: #fff; background: var(--bk-blue);
+    box-shadow: 5px 5px 0 var(--bk-dark); cursor: pointer;
+    transition: transform .1s, box-shadow .1s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    text-decoration: none;
+}
+.btn-rbx:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--bk-dark); color: #fff; }
+.btn-rbx:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--bk-dark); }
+.btn-rbx.green { background: var(--bk-green); color: #06340d; }
+.btn-rbx.yellow { background: var(--bk-yellow); color: #4a3800; }
+.btn-rbx.dark { background: var(--bk-dark); }
+.btn-rbx.red { background: var(--bk-red); }
+.btn-rbx:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: 5px 5px 0 var(--bk-dark); }
+
+/* ---------- Card ---------- */
+.mr-card { background: #fff; border: 5px solid var(--bk-dark); box-shadow: 10px 10px 0 rgba(0,0,0,.4); }
+.mr-head {
+    background: var(--bk-blue); color: #fff;
+    padding: 20px 22px; border-bottom: 5px solid var(--bk-dark); text-align: center;
+}
+.mr-head h1 { font-family: 'Bungee', cursive; font-size: 1.35rem; margin: 0; text-shadow: 2px 2px 0 rgba(0,0,0,.35); letter-spacing: 1px; }
+.mr-head .sub { font-size: .8rem; opacity: .95; margin-top: 4px; }
+.mr-body { padding: 22px; }
+
+/* ---------- Fields ---------- */
+.mr-label {
+    font-family: 'Bungee', cursive; font-size: .62rem; letter-spacing: .5px;
+    display: block; margin-bottom: 6px; color: var(--bk-dark);
+}
+.mr-label .req { color: var(--bk-red); }
+.mr-input, .mr-select, .mr-textarea {
+    width: 100%;
+    border: 3px solid var(--bk-dark) !important; border-radius: 0 !important;
+    padding: 10px !important; font-family: 'Poppins', sans-serif;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.15); background: #fff; color: var(--bk-dark);
+}
+.mr-input:focus, .mr-select:focus, .mr-textarea:focus {
+    border-color: var(--bk-blue) !important;
+    box-shadow: 0 0 0 4px rgba(0,162,255,.25) !important; outline: none;
+}
+.mr-input[readonly] { background: #eceff3; color: #555; }
+.mr-textarea { resize: vertical; min-height: 120px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fld { margin-bottom: 16px; }
+.char-count { font-size: .72rem; color: #666; text-align: right; margin-top: 4px; }
+.char-count.bad { color: var(--bk-red); font-weight: 700; }
+
+/* ---------- Severity radios ---------- */
+.sev-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.sev-opt {
+    border: 3px solid var(--bk-dark); box-shadow: 3px 3px 0 rgba(0,0,0,.2);
+    text-align: center; padding: 12px 4px; cursor: pointer;
+    font-family: 'Bungee', cursive; font-size: .7rem; background: #fff;
+    transition: transform .1s;
+    user-select: none;
+}
+.sev-opt input { display: none; }
+.sev-opt:hover { transform: translate(-1px,-1px); }
+.sev-opt.low.active { background: var(--bk-green); color: #06340d; }
+.sev-opt.medium.active { background: var(--bk-yellow); color: #4a3800; }
+.sev-opt.high.active { background: var(--bk-red); color: #fff; }
+.sev-opt .dot { display:block; font-size:1.1rem; line-height:1; margin-bottom:4px; }
+
+/* ---------- Upload ---------- */
+.mr-upload { border: 3px dashed var(--bk-dark); padding: 16px; text-align: center; background: #f7f9fc; }
+.mr-previews { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.mr-thumb { position: relative; width: 80px; height: 80px; border: 3px solid var(--bk-dark); box-shadow: 3px 3px 0 rgba(0,0,0,.25); overflow: hidden; }
+.mr-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mr-thumb button {
+    position: absolute; top: -2px; right: -2px; width: 22px; height: 22px;
+    background: var(--bk-red); color: #fff; border: 2px solid var(--bk-dark);
+    font-family: 'Bungee', cursive; font-size: .7rem; line-height: 1; cursor: pointer; padding: 0;
+}
+
+/* ---------- Footer actions ---------- */
+.mr-foot { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 22px; border-top: 3px solid var(--bk-dark); background: #f5f5f5; flex-wrap: wrap; }
+
+/* ---------- Modal ---------- */
+.mr-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+.mr-backdrop.show { display: flex; }
+.mr-modal { background: #fff; border: 5px solid var(--bk-dark); box-shadow: 10px 10px 0 rgba(0,0,0,.5); max-width: 440px; width: 100%; }
+.mr-modal-head { padding: 16px; border-bottom: 4px solid var(--bk-dark); font-family: 'Bungee', cursive; color: #fff; background: var(--bk-yellow); color:#4a3800; }
+.mr-modal-head.success { background: var(--bk-green); color: #06340d; }
+.mr-modal-body { padding: 20px; font-size: .95rem; }
+.mr-modal-foot { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 20px; border-top: 3px solid var(--bk-dark); background: #f5f5f5; }
+
+.hint { font-size: .72rem; color: #666; font-family:'Poppins',sans-serif; font-weight:400; }
+
+@media (max-width: 520px) {
+    .row-2 { grid-template-columns: 1fr; }
+    .mr-head h1 { font-size: 1.1rem; }
+}
+    </style>
+</head>
+<body>
+    <nav class="mr-nav">
+        <div class="brand"><i class="bi bi-tools"></i> E-BOOKING SYSTEM</div>
+        <a href="user_dashboard.html" class="btn-rbx dark" style="box-shadow:3px 3px 0 #000;padding:8px 12px;font-size:.6rem;">
+            <i class="bi bi-grid-fill"></i> DASHBOARD
+        </a>
+    </nav>
+
+    <div class="mr-wrap">
+        <div class="mr-card">
+            <div class="mr-head">
+                <h1>MAINTENANCE REPORT</h1>
+                <div class="sub">Report any classroom or facility issue. Your report will be sent to the administrator for review.</div>
+            </div>
+
+            <form id="mrForm" class="mr-body" novalidate>
+                <div class="row-2">
+                    <div class="fld">
+                        <label class="mr-label">Booking Reference</label>
+                        <input type="text" class="mr-input" id="fRef" readonly>
+                    </div>
+                    <div class="fld">
+                        <label class="mr-label">Room</label>
+                        <input type="text" class="mr-input" id="fRoom" readonly>
+                    </div>
+                </div>
+
+                <div class="row-2">
+                    <div class="fld">
+                        <label class="mr-label">Student Name</label>
+                        <input type="text" class="mr-input" id="fName" readonly>
+                    </div>
+                    <div class="fld">
+                        <label class="mr-label">Student ID</label>
+                        <input type="text" class="mr-input" id="fStudentId" readonly>
+                    </div>
+                </div>
+
+                <div class="row-2">
+                    <div class="fld">
+                        <label class="mr-label">Issue Category <span class="req">*</span></label>
+                        <select class="mr-select" id="fCategory" required>
+                            <option value="">-- Select --</option>
+                            <option>Air Conditioner</option>
+                            <option>Projector</option>
+                            <option>Whiteboard</option>
+                            <option>Chair</option>
+                            <option>Table</option>
+                            <option>Lighting</option>
+                            <option>Electrical</option>
+                            <option>Internet</option>
+                            <option>Door / Lock</option>
+                            <option>Cleanliness</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="fld">
+                        <label class="mr-label">Severity <span class="req">*</span></label>
+                        <div class="sev-group">
+                            <label class="sev-opt low" data-sev="low">
+                                <input type="radio" name="severity" value="low">
+                                <span class="dot"><i class="bi bi-circle-fill"></i></span>LOW
+                            </label>
+                            <label class="sev-opt medium active" data-sev="medium">
+                                <input type="radio" name="severity" value="medium" checked>
+                                <span class="dot"><i class="bi bi-exclamation-circle-fill"></i></span>MED
+                            </label>
+                            <label class="sev-opt high" data-sev="high">
+                                <input type="radio" name="severity" value="high">
+                                <span class="dot"><i class="bi bi-exclamation-triangle-fill"></i></span>HIGH
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fld">
+                    <label class="mr-label">Description <span class="req">*</span></label>
+                    <textarea class="mr-textarea" id="fDesc" maxlength="1000" placeholder="Describe the issue in detail…" required></textarea>
+                    <div class="char-count" id="charCount">0 / 1000 (minimum 20)</div>
+                </div>
+
+                <div class="fld">
+                    <label class="mr-label">Upload Images <span class="hint">(JPG/PNG/JPEG, max 5 files, 10MB each)</span></label>
+                    <div class="mr-upload">
+                        <input type="file" id="fFiles" accept="image/jpeg,image/png,image/jpg" multiple hidden>
+                        <button type="button" class="btn-rbx" id="pickBtn"><i class="bi bi-cloud-upload"></i> CHOOSE IMAGES</button>
+                        <div class="mr-previews" id="previews"></div>
+                    </div>
+                </div>
+
+                <div class="fld">
+                    <label class="mr-label">Report Time</label>
+                    <input type="text" class="mr-input" id="fTime" readonly>
+                </div>
+            </form>
+
+            <div class="mr-foot">
+                <a href="user_dashboard.html" class="btn-rbx dark"><i class="bi bi-x-lg"></i> CANCEL</a>
+                <button type="button" class="btn-rbx green" id="submitBtn"><i class="bi bi-send-fill"></i> SUBMIT REPORT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation modal -->
+    <div class="mr-backdrop" id="confirmBackdrop">
+        <div class="mr-modal">
+            <div class="mr-modal-head"><i class="bi bi-question-circle-fill"></i> CONFIRM SUBMISSION</div>
+            <div class="mr-modal-body">Are you sure you want to submit this maintenance report? Please make sure the details are correct.</div>
+            <div class="mr-modal-foot">
+                <button class="btn-rbx dark" id="confirmCancel">NO, GO BACK</button>
+                <button class="btn-rbx green" id="confirmYes">YES, SUBMIT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success modal -->
+    <div class="mr-backdrop" id="successBackdrop">
+        <div class="mr-modal">
+            <div class="mr-modal-head success"><i class="bi bi-check-circle-fill"></i> REPORT SUBMITTED</div>
+            <div class="mr-modal-body" id="successMsg">Your maintenance report has been submitted successfully. The administrator will review it shortly.</div>
+            <div class="mr-modal-foot">
+                <a class="btn-rbx dark" href="user_dashboard.html">DASHBOARD</a>
+                <button class="btn-rbx green" id="successClose">DONE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    /* =========================================================
+       CONFIG — Supabase (optional). Falls back to mock if blank.
+    ========================================================= */
+    const SUPABASE_URL = "";
+    const SUPABASE_ANON_KEY = "";
+    let supabaseClient = null;
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    /* ---------- Config ---------- */
+    const MAX_FILES = 5;
+    const MAX_SIZE = 10 * 1024 * 1024;      // 10MB
+    const ALLOWED = ['image/jpeg', 'image/png', 'image/jpg'];
+    const MIN_DESC = 20;
+    const COOLDOWN_MS = 5 * 60 * 1000;      // 5 minutes
+    const COOLDOWN_KEY = 'mr_last_submit_ts';
+
+    let selectedFiles = [];
+    const $ = id => document.getElementById(id);
+
+    /* ---------- Helpers ---------- */
+    function getParam(name) { return new URLSearchParams(window.location.search).get(name); }
+    function pick(paramKey, storageKey, fallback) {
+        return getParam(paramKey) || localStorage.getItem(storageKey) || fallback;
+    }
+
+    /* ---------- Auto-fill (URL -> localStorage -> fallback), READONLY ---------- */
+    function autofill() {
+        $('fRef').value = pick('ref', 'last_booking_ref', 'N/A');
+        $('fRoom').value = pick('room', 'last_room', 'N/A');
+        $('fName').value = pick('name', 'user_name', 'N/A');
+        $('fStudentId').value = pick('studentId', 'user_student_id', 'S00000');
+    }
+
+    /* ---------- Live report time ---------- */
+    function tickTime() {
+        const now = new Date();
+        $('fTime').value = now.toLocaleDateString('en-GB') + ', ' +
+            now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    /* ---------- Severity radios ---------- */
+    function wireSeverity() {
+        document.querySelectorAll('.sev-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('.sev-opt').forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                opt.querySelector('input').checked = true;
+            });
+        });
+    }
+    function getSeverity() {
+        const el = document.querySelector('input[name="severity"]:checked');
+        return el ? el.value : 'medium';
+    }
+
+    /* ---------- Description counter ---------- */
+    function wireDesc() {
+        const ta = $('fDesc'), cc = $('charCount');
+        ta.addEventListener('input', () => {
+            const len = ta.value.trim().length;
+            cc.textContent = `${ta.value.length} / 1000 (minimum ${MIN_DESC})`;
+            cc.classList.toggle('bad', len > 0 && len < MIN_DESC);
+        });
+    }
+
+    /* ---------- File selection + preview ---------- */
+    function wireFiles() {
+        const input = $('fFiles');
+        $('pickBtn').addEventListener('click', () => input.click());
+        input.addEventListener('change', e => {
+            for (const f of Array.from(e.target.files || [])) {
+                if (selectedFiles.length >= MAX_FILES) { alert('Maximum ' + MAX_FILES + ' images allowed.'); break; }
+                if (!ALLOWED.includes(f.type)) { alert('Only JPG/PNG allowed: ' + f.name); continue; }
+                if (f.size > MAX_SIZE) { alert('File exceeds 10MB: ' + f.name); continue; }
+                selectedFiles.push(f);
+            }
+            input.value = '';
+            renderPreviews();
+        });
+    }
+    function renderPreviews() {
+        const wrap = $('previews');
+        wrap.innerHTML = '';
+        selectedFiles.forEach((f, i) => {
+            const url = URL.createObjectURL(f);
+            const div = document.createElement('div');
+            div.className = 'mr-thumb';
+            div.innerHTML = `<img src="${url}" alt="preview"><button type="button" aria-label="Remove">&times;</button>`;
+            div.querySelector('button').onclick = () => { selectedFiles.splice(i, 1); renderPreviews(); };
+            wrap.appendChild(div);
+        });
+    }
+
+    /* ---------- Upload images to Supabase Storage ---------- */
+    async function uploadImages(refId) {
+        if (!supabaseClient || !selectedFiles.length) return [];
+        const urls = [];
+        for (const f of selectedFiles) {
+            const path = `${refId}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+            try {
+                const { error } = await supabaseClient.storage.from('maintenance-images').upload(path, f);
+                if (!error) {
+                    const { data } = supabaseClient.storage.from('maintenance-images').getPublicUrl(path);
+                    urls.push(data.publicUrl);
+                }
+            } catch (e) { console.warn('[v0] Upload failed', e); }
+        }
+        return urls;
+    }
+
+    /* ---------- Validation ---------- */
+    function validate() {
+        const errors = [];
+        if (!$('fCategory').value) errors.push('Please select an issue category.');
+        if ($('fDesc').value.trim().length < MIN_DESC) errors.push(`Description must be at least ${MIN_DESC} characters.`);
+        return errors;
+    }
+
+    /* ---------- Cooldown ---------- */
+    function cooldownRemaining() {
+        const last = parseInt(localStorage.getItem(COOLDOWN_KEY) || '0', 10);
+        const elapsed = Date.now() - last;
+        return elapsed >= COOLDOWN_MS ? 0 : Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+    }
+
+    /* ---------- Modals ---------- */
+    function showModal(id) { $(id).classList.add('show'); }
+    function hideModal(id) { $(id).classList.remove('show'); }
+
+    /* ---------- Submit flow ---------- */
+    function wireSubmit() {
+        $('submitBtn').addEventListener('click', () => {
+            const errors = validate();
+            if (errors.length) { alert(errors.join('\n')); return; }
+
+            const remain = cooldownRemaining();
+            if (remain > 0) {
+                const m = Math.floor(remain / 60), s = remain % 60;
+                alert(`Please wait ${m}m ${s}s before submitting another report.`);
+                return;
+            }
+            showModal('confirmBackdrop');
+        });
+
+        $('confirmCancel').addEventListener('click', () => hideModal('confirmBackdrop'));
+        $('confirmYes').addEventListener('click', doSubmit);
+        $('successClose').addEventListener('click', () => hideModal('successBackdrop'));
+    }
+
+    async function doSubmit() {
+        const btn = $('confirmYes');
+        btn.disabled = true; btn.textContent = 'SUBMITTING…';
+
+        const refId = $('fRef').value;
+        const imageUrls = await uploadImages(refId);
+
+        const payload = {
+            reference: refId,
+            room: $('fRoom').value,
+            reporter_name: $('fName').value,
+            student_id: $('fStudentId').value,
+            category: $('fCategory').value,
+            severity: getSeverity(),
+            description: $('fDesc').value.trim(),
+            image_urls: imageUrls,
+            status: 'OPEN',
+            created_at: new Date().toISOString()
+        };
+
+        let ok = true;
+        if (supabaseClient) {
+            try {
+                const { error } = await supabaseClient.from('maintenance_reports').insert(payload);
+                if (error) { ok = false; console.warn('[v0] Insert failed', error); }
+            } catch (e) { ok = false; console.warn('[v0] Insert threw', e); }
+        } else {
+            // Mock mode: store locally so the flow is testable without a backend
+            const list = JSON.parse(localStorage.getItem('maintenance_reports') || '[]');
+            list.push(payload);
+            localStorage.setItem('maintenance_reports', JSON.stringify(list));
+        }
+
+        btn.disabled = false; btn.textContent = 'YES, SUBMIT';
+        hideModal('confirmBackdrop');
+
+        if (ok) {
+            localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+            $('successMsg').innerHTML = `Report for <b>${refId}</b> submitted successfully` +
+                (imageUrls.length ? ` with ${imageUrls.length} image(s)` : '') +
+                `.<br>The administrator will review it shortly.`;
+            showModal('successBackdrop');
+            document.getElementById('mrForm').reset();
+            selectedFiles = []; renderPreviews();
+            document.querySelectorAll('.sev-opt').forEach(o => o.classList.remove('active'));
+            document.querySelector('.sev-opt.medium').classList.add('active');
+            $('charCount').textContent = `0 / 1000 (minimum ${MIN_DESC})`;
+            autofill();
+        } else {
+            alert('Submission failed. Please try again.');
+        }
+    }
+
+    /* ---------- Init ---------- */
+    (function init() {
+        autofill();
+        tickTime();
+        setInterval(tickTime, 1000);
+        wireSeverity();
+        wireDesc();
+        wireFiles();
+        wireSubmit();
+    })();
+    </script>
+</body>
+</html>
