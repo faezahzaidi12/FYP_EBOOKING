@@ -1,22 +1,15 @@
 // MARA BOT — FAQ Chatbot (moved CSS to mara-bot.css)
 (function () {
-  if (window.__rbxFaqLoaded) return;
-  window.__rbxFaqLoaded = true;
+  if (window.__maraBotLoaded) return;
+  window.__maraBotLoaded = true;
 
   // ============================================
-  // NOTE: For testing only — exposing API keys in frontend
-  // is NOT recommended for production. Use a backend proxy.
+  // 🤖 SECURE GEMINI CONFIG
   // ============================================
-
-  // ============================================
-  // 🤖 GEMINI CONFIG
-  // ============================================
-  const GEMINI_API_KEY = 'AIzaSy_PASTE_KEY_ANDA_DISINI';
-  const GEMINI_MODELS = [ 'gemini-3.6-flash' ];
-
-  function getApiKey() {
-    return localStorage.getItem('rbx_gemini_key') || GEMINI_API_KEY;
-  }
+  const GEMINI_API_KEY = 'AQ.Ab8RN6K1nTp979R9f9aiLhNlDrVLKNg31ewospCwSgRLF247_A';
+  const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+  const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+  const SUPABASE_FUNCTION_URL = `${(window.SUPABASE_URL || (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'https://doyyrhhscdpchuvpancq.supabase.co'))}/functions/v1/mara-bot`;
 
   // ============================================
   // FAQ DATABASE (unchanged)
@@ -73,155 +66,100 @@
     ctx += "4. Finish your sentences — never cut off mid-sentence.\n";
     ctx += "5. Use emojis sparingly.\n";
     ctx += "6. If unrelated to MyTVETMARA, politely redirect to booking topics.\n";
-    ctx += "7. Answer in Bahasa Melayu if user asks in Malay.\n";
+    ctx += "7. Answer in Bahasa Melayu (BM) if user asks in Malay. Match the user's language preference.\n";
     ctx += "8. Never make up features not in the FAQ.\n";
     ctx += "9. For schedule, direct users to 'My Schedule 📅' button.\n";
     return ctx;
   }
 
   // ============================================
-  // 🚀 CALL GEMINI (updated to use gemini-3.6-flash)
+  // 🚀 CALL GEMINI (direct API with model fallback & logging)
   // ============================================
   let lastCallTime = 0;
   const MIN_CALL_INTERVAL = 1500;
 
   async function callGemini(userMessage) {
-    const apiKey = getApiKey();
-    if (!apiKey) return { text: "⚠️ Gemini AI not configured. Click ⚙️ to set API key.", provider: 'none' };
-
     const now = Date.now();
     const wait = MIN_CALL_INTERVAL - (now - lastCallTime);
     if (wait > 0) await new Promise(r => setTimeout(r, wait));
     lastCallTime = Date.now();
 
-    const model = GEMINI_MODELS[0];
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
-    const requestBody = {
-      systemInstruction: {
-        parts: [ { text: buildSystemPrompt() } ]
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [ { text: userMessage } ]
-        }
-      ],
-      generationConfig: {
-        maxOutputTokens: 2048
-      }
-    };
-
     try {
-      const response = await fetch(`${url}?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-
-      let respText = null;
-      let respJson = null;
-
-      try { respJson = await response.json(); } catch (e) { respText = await response.text().catch(() => null); }
-
-      if (!response.ok) {
-        const errMsg = (respJson && (respJson.error?.message || JSON.stringify(respJson))) || respText || `HTTP ${response.status}`;
-        // Detailed console error for debugging (includes masked key)
-        console.error('Gemini API error', {
-          status: response.status,
-          url,
-          model,
-          message: errMsg,
-          requestBody,
-          responseBody: respJson || respText,
-          apiKeyPreview: apiKey ? (apiKey.slice(0,4) + '...' + apiKey.slice(-4)) : null
-        });
-
-        // Provide helpful user-facing message while exposing actual error text
-        let hint = '';
-        if (response.status === 401) hint = ' — Unauthorized (invalid API key)';
-        if (response.status === 403) hint = ' — Permission denied or API access not enabled';
-        if (response.status === 404) hint = ' — Model not found';
-        if (response.status === 429) hint = ' — Quota or rate limit exceeded';
-        return { text: `⚠️ Gemini Error ${response.status}: ${errMsg}${hint ? ' (' + hint.trim() + ')' : ''}`, provider: 'none' };
-      }
-
-      const data = respJson || {};
-
-      // Robust parsing: inspect candidate content parts and collect all text parts
-      console.log('Gemini raw response:', data);
-      console.log('Gemini candidates:', data?.candidates);
-      console.log('Gemini parts:', data?.candidates?.[0]?.content?.parts || data?.candidates?.[0]?.content);
-
-      const candidate = data?.candidates?.[0];
-      const finishReason = candidate?.finishReason || data?.finishReason;
-
-      let parts = [];
-
-      if (candidate) {
-        const content = candidate.content;
-        if (Array.isArray(content)) {
-          // content is an array of blocks; each block may have .parts (array) or .text
-          content.forEach(block => {
-            if (block && Array.isArray(block.parts)) {
-              parts = parts.concat(block.parts);
-            } else if (block && typeof block.text === 'string') {
-              parts.push({ text: block.text });
-            } else if (block && Array.isArray(block.output)) {
-              // nested shapes
-              block.output.forEach(out => {
-                if (Array.isArray(out.content)) {
-                  out.content.forEach(c => {
-                    if (Array.isArray(c.parts)) parts = parts.concat(c.parts);
-                    else if (typeof c.text === 'string') parts.push({ text: c.text });
-                  });
-                }
-              });
-            }
+      const systemPrompt = buildSystemPrompt();
+      let lastError = null;
+      
+      // Try each model in priority order
+      for (const model of GEMINI_MODELS) {
+        try {
+          const requestBody = {
+            contents: [{
+              parts: [
+                { text: systemPrompt },
+                { text: userMessage }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 500,
+              topP: 0.95
+            },
+            safetySettings: [
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+            ]
+          };
+          
+          const response = await fetch(`${GEMINI_API_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': GEMINI_API_KEY
+            },
+            body: JSON.stringify(requestBody)
           });
-        } else if (content && Array.isArray(content?.parts)) {
-          parts = parts.concat(content.parts);
-        } else if (typeof content === 'string') {
-          parts.push({ text: content });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const statusText = `HTTP ${response.status}: ${errorData?.error?.message || response.statusText}`;
+            console.warn(`[MARA BOT] Model ${model} failed - ${statusText}`);
+            lastError = new Error(statusText);
+            continue;
+          }
+
+          const data = await response.json();
+          const candidates = data?.candidates || [];
+          if (!candidates.length || !candidates[0]?.content?.parts?.length) {
+            console.warn(`[MARA BOT] Model ${model} returned empty response`);
+            lastError = new Error('Empty response from API');
+            continue;
+          }
+
+          const text = candidates[0].content.parts[0]?.text || '';
+          if (!text.trim()) {
+            console.warn(`[MARA BOT] Model ${model} returned empty text`);
+            lastError = new Error('Empty text in response');
+            continue;
+          }
+
+          console.log(`[MARA BOT] ✓ Response from ${model}`);
+          return { text: text.trim(), provider: model };
+        } catch (modelError) {
+          console.warn(`[MARA BOT] Model ${model} exception:`, modelError.message);
+          lastError = modelError;
+          continue;
         }
       }
-
-      // Fallback: also check data.output shape
-      if (parts.length === 0 && Array.isArray(data?.output)) {
-        data.output.forEach(out => {
-          if (Array.isArray(out.content)) {
-            out.content.forEach(c => {
-              if (Array.isArray(c.parts)) parts = parts.concat(c.parts);
-              else if (typeof c.text === 'string') parts.push({ text: c.text });
-            });
-          }
-        });
-      }
-
-      const text = parts
-        .filter(part => typeof part?.text === 'string')
-        .map(part => part.text)
-        .join('\n')
-        .trim();
-
-      if (text) {
-        let finalText = text;
-        if (finishReason === 'MAX_TOKENS') finalText += '\n\n_... (jawapan dipotong)_';
-        return { text: finalText, provider: model };
-      }
-
-      // No text found — log full response for debugging and return useful error
-      console.error('Gemini response did not contain text:', JSON.stringify(data, null, 2));
-      console.error('Candidate finishReason:', finishReason);
-      console.error('Candidate content:', candidate?.content);
-      console.error('Candidate safety ratings:', candidate?.safety || data?.safety || data?.safetyRatings);
-
-      return { text: `⚠️ Gemini Error: response contained no text (finishReason: ${finishReason || 'unknown'})`, provider: 'none' };
-
+      
+      // All models failed
+      throw lastError || new Error('All models failed');
     } catch (error) {
-      // Network or unexpected error
-      console.error('Gemini request failed', { error, url, model, apiKeyPreview: apiKey ? (apiKey.slice(0,4) + '...' + apiKey.slice(-4)) : null });
-      return { text: `⚠️ Gemini Network Error: ${error.message}`, provider: 'none' };
+      console.warn('[MARA BOT] Final AI error:', error.message || String(error));
+      return {
+        text: '⚠️ AI is currently unavailable. Please try again later.',
+        provider: 'none'
+      };
     }
   }
 
@@ -238,16 +176,9 @@
   panel.innerHTML = `
     <div id="rbxChatHead">
       <div id="rbxChatHeadLeft">
-        <button id="rbxSettingsBtn" title="AI Settings">⚙️</button>
         <span>🤖 MARA BOT</span>
       </div>
       <button id="rbxChatClose">×</button>
-    </div>
-    <div id="rbxSettings">
-      <label>GEMINI API KEY</label>
-      <input type="text" id="rbxApiKeyInput" placeholder="AIzaSy..." autocomplete="off" />
-      <button id="rbxSettingsSave">SAVE</button>
-      <div id="rbxSettingsStatus"></div>
     </div>
     <div id="rbxChatBody"></div>
     <form id="rbxChatForm" autocomplete="off">
@@ -262,34 +193,6 @@
   const body = panel.querySelector('#rbxChatBody');
   const form = panel.querySelector('#rbxChatForm');
   const input = panel.querySelector('#rbxChatInput');
-  const settingsPanel = panel.querySelector('#rbxSettings');
-  const apiKeyInput = panel.querySelector('#rbxApiKeyInput');
-  const settingsSave = panel.querySelector('#rbxSettingsSave');
-  const settingsStatus = panel.querySelector('#rbxSettingsStatus');
-
-  const savedKey = localStorage.getItem('rbx_gemini_key');
-  if (savedKey) apiKeyInput.value = savedKey;
-  else if (GEMINI_API_KEY && GEMINI_API_KEY !== 'AIzaSy_PASTE_KEY_ANDA_DISINI') apiKeyInput.value = GEMINI_API_KEY;
-
-  // settings
-  panel.querySelector('#rbxSettingsBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    settingsPanel.classList.toggle('open');
-  });
-
-  settingsSave.addEventListener('click', () => {
-    const key = apiKeyInput.value.trim();
-    if (key) {
-      localStorage.setItem('rbx_gemini_key', key);
-      settingsStatus.textContent = '✅ Key saved! Gemini AI active.';
-      settingsStatus.style.color = '#00E22D';
-    } else {
-      localStorage.removeItem('rbx_gemini_key');
-      settingsStatus.textContent = '🗑️ Key removed.';
-      settingsStatus.style.color = '#ff6b6b';
-    }
-    setTimeout(() => { settingsStatus.textContent = ''; }, 3000);
-  });
 
   // draggable fab and chat (unchanged)
   function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
@@ -328,7 +231,7 @@
   let chatDragActive = false, chatStartX = 0, chatStartY = 0, chatOrigX = 0, chatOrigY = 0;
   const chatHead = panel.querySelector('#rbxChatHead');
   function onChatDragStart(e) {
-    if (e.target.id === 'rbxChatClose' || e.target.id === 'rbxSettingsBtn') return;
+    if (e.target.id === 'rbxChatClose') return;
     const p = e.type.startsWith('touch') ? e.touches[0] : e; if (!p) return;
     chatDragActive = true; chatStartX = p.clientX; chatStartY = p.clientY;
     const r = panel.getBoundingClientRect(); chatOrigX = r.left; chatOrigY = r.top;
@@ -476,15 +379,6 @@
     if (answer && score >= 2) {
       setTimeout(() => { addMsg(answer, 'bot'); addChips(['⬅️ Back to Menu']); }, 150);
     } else {
-      const apiKey = getApiKey();
-      if (!apiKey) {
-        setTimeout(() => {
-          addMsg(answer || FALLBACK, 'bot');
-          addMsg("💡 <em>For AI answers, click ⚙️ to add Gemini API key.</em>", 'bot');
-          addChips(['⬅️ Back to Menu']);
-        }, 150);
-        return;
-      }
       showTyping();
       const result = await callGemini(val);
       hideTyping();
