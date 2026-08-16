@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <!-- Link ke style_index.css yang berada di dalam folder yang sama -->
     <link rel="stylesheet" href="/FYP_Ebooking/USER_PAGE/style_index.css">
+    <link rel="stylesheet" href="footer.css">
 
     <!-- REQUIRED: Supabase JS SDK. Must load sebelum fail inline script di bawah diimport [33] -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -104,11 +105,15 @@
         tryLoad();
     })();
     </script>
+<div id="footer-placeholder"></div>
+
 <script>
-fetch('footer.html')
-  .then(res => res.text())
-  .then(html => {
-    document.getElementById('footer-placeholder').innerHTML = html;
-  });
-</script></body>
+  fetch('../footer.html')
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById('footer-placeholder').innerHTML = data;
+    })
+    .catch(err => console.error('Error load footer:', err));
+</script>
+</body>
 </html>
