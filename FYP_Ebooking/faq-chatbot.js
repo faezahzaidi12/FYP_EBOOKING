@@ -3,7 +3,7 @@
   if (window.__rbxFaqLoaded) return;
   window.__rbxFaqLoaded = true;
 
-  const GEMINI_API_KEY = 'AQ.Ab8RN6K1nTp979R9f9aiLhNlDrVLKNg31ewospCwSgRLF247_A';
+  const GEMINI_API_KEY = '';
   const GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash'];
 
   const FAQS = [
