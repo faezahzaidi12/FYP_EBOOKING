@@ -1,37 +1,39 @@
-// MyTVETMARA FAQ Chatbot — Full Drag & Drop Version
+// MyTVETMARA FAQ & Smart Room Search Bot (Strict Time Filter)
 (function () {
   if (window.__rbxFaqLoaded) return;
   window.__rbxFaqLoaded = true;
 
   const GEMINI_API_KEY = '';
-  const GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+  const GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash',  'gemini-1.5-flash'];
+
+  const SB_URL = 'https://doyyrhhscdpchuvpancq.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A';
+
+  const ALL_ROOMS = [
+  'dfk 1', 'dfk 2', 'dfk 3', 'dfk 4', 'dfk 5', 'dfk 6', 'dfk 7', 'dfk 8', 'dfk 9', 'dfk 10' ,
+  'literasi 1', 'literasi 2', 'century 21st',
+  'field', 'badminton court', 'volleyball court', 'takraw court', 'pingpong room'
+  ];
 
   const FAQS = [
     { q: ['how', 'book', 'room', 'reserve', 'tempah', 'cara', 'bilik'], a: "To book a room: Login → HOME → GO TO BOOKING SYSTEM → choose a building (DFK / Library / Sport) → pick a room → tap an available time slot." },
     { q: ['check', 'in', 'checkin', 'check-in info 📍', 'masuk'], a: "Pending check-ins appear on your HOME dashboard under 'PENDING CHECK-IN'. Click the yellow card to confirm your check-in." },
     { q: ['cancel', 'booking', 'batal'], a: "Bookings you don't check-in on time are auto-cancelled by the system. To cancel manually, open the booking from your dashboard." },
     { q: ['login', 'log in', 'sign in', 'masuk akaun'], a: "Use your registered email and password on the LOG IN page. If you don't have an account, click SIGN UP." },
-    { q: ['register', 'sign up', 'signup', 'account', 'daftar'], a: "Click SIGN UP on the login page and fill in your name, email and password. You'll receive a confirmation email." },
+    { q: ['register', 'sign up', 'signup', 'account', 'daftar'], a: "Click SIGN UP on the login page and fill in your name, email and password." },
     { q: ['password', 'forgot', 'reset', 'lupa kata laluan'], a: "Password reset isn't in-app yet — please contact the admin to reset your password." },
-    { q: ['facility', 'facilities', 'sport', 'library', 'dfk', 'available', 'kemudahan'], a: "Available facilities: DFK Building (Rooms 1–10), Library (Century 21st, Literasi 1 & 2), and Sports (Badminton, Field, Ping Pong, Takraw, Volleyball)." },
-    { q: ['time', 'slot', 'hour', 'when', 'open', 'masa'], a: "Time slots are shown on each room's timetable. Green/white = available, red = booked. Tap any available slot to book." },
-    { q: ['maintenance', 'report', 'issue', 'broken', 'rosak', 'projector', 'aircond', 'light', 'lampu', 'kerusi', 'report issue 🛠️'], a: "🛠️ Found a broken item? You can submit a report using the 'Maintenance Report' form on your check-in page." },
-    { q: ['feedback', 'rating', 'star', 'review', 'komen', 'bintang', 'feedback ⭐'], a: "⭐ We value your feedback! Rate your classroom experience (1-5 stars) after your check-in session." },
-    { q: ['quota', 'limit', 'max', 'maximum', 'berapa', 'had', 'banyak', 'quota limit 📌'], a: "📌 Booking Quota: Students can have up to 3 active bookings at a time (maximum 12 hours per week)." },
-    { q: ['pending', 'approval', 'lulus', 'approve', 'status', 'admin'], a: "⏳ Pending bookings require admin approval. Approval usually takes 1-2 hours during office hours." },
-    { q: ['late', 'lewat', 'grace', 'minit', 'terlepas', 'auto cancel', 'autocancel'], a: "⏰ Grace Period: You have 15 minutes to check in after your booking time starts. After 15 minutes, your booking will be automatically cancelled!" },
-    { q: ['advance', 'early', 'awal', 'days', 'hari', 'bila', 'future'], a: "📅 Advance Booking: You can book facilities up to 7 days in advance." },
+    { q: ['facility', 'facilities', 'sport', 'library', 'dfk', 'available', 'kemudahan'], a: "Available facilities: DFK Building (dfk.01–dfk.09), Library (Literasi 1, Literasi 2, Century 21st), and Sports (Field, Badminton Hall, Volleyball Court, Takraw Court, Pingpong Room)." },
+    { q: ['time', 'slot', 'hour', 'when', 'open', 'masa'], a: "Time slots are shown on each room's timetable. Green/white = available, red = booked." },
     { q: ['operation', 'operating', 'hours', 'waktu', 'operasi', 'weekend', 'sabtu', 'jumaat', 'buka', 'tutup', 'operating hours 🕒'], a: "🕒 Operating Hours: Sunday–Thursday (8:00 AM – 5:00 PM). Facilities are closed on Weekends & Public Holidays." },
     { q: ['admin', 'contact', 'help', 'support', 'bantuan'], a: "For issues not answered here, please contact your TVET MARA administrator." },
-    { q: ['who', 'what', 'mytvetmara', 'about', 'apa itu'], a: "MyTVETMARA e-Booking is the official room & facility booking system for TVET MARA students and staff." },
-    { q: ['free', 'kosong', 'available', 'kelas mana', 'bilik mana', 'harini', 'ada kosong'], a: "🟢 Untuk semak bilik/kelas yang FREE & KOSONG: Pergi ke menu HOME → GO TO BOOKING SYSTEM → Pilih Bangunan (DFK / Library / Sport). Slot berwarna HIJAU/PUTIH bermaksud bilik tersebut KOSONG & boleh ditempah segera!" }
+    { q: ['who', 'what', 'mytvetmara', 'about', 'apa itu'], a: "MyTVETMARA e-Booking is the official room & facility booking system for TVET MARA students and staff." }
   ];
 
-  const GREETING = "Hi! 👋 I'm MARA BOT. I can answer FAQ instantly or use AI for anything else. How can I help?";
-  
+  const GREETING = "Hi! 👋 I'm CHITCHAT BOT. I can answer FAQs or search available classrooms & sports facilities . How can I help?";
+
   function findAnswer(text) {
     const t = text.toLowerCase();
-    if (t.split(' ').length > 4 || t.includes('boleh ke') || t.includes('adakah') || t.includes('kenapa') || t.includes('macam mana')) {
+    if (t.split(' ').length > 4 || t.includes('boleh ke') || t.includes('adakah') || t.includes('kenapa') || t.includes('macam mana') || t.includes('cari') || t.includes('kosong') || t.includes('free') || t.includes('available') || t.includes('book') || t.includes('tempah')) {
       return { answer: null, score: 0 };
     }
     let best = null, bestScore = 0;
@@ -42,24 +44,129 @@
     return { answer: bestScore >= 2 ? best.a : null, score: bestScore };
   }
 
-  // ============================================
-  // 🧠 GEMINI SYSTEM PROMPT (Dah diubah jadi lebih mesra)
-  // ============================================
-  function buildSystemPrompt() {
-    let ctx = "You are MARA BOT, the official assistant for MyTVETMARA e-Booking system (TVET MARA room & facility booking).\n\n";
-    ctx += "=== OFFICIAL FAQ KNOWLEDGE BASE ===\n";
-    FAQS.forEach((f, i) => { ctx += `FAQ ${i + 1} (${f.q.join(', ')}): ${f.a}\n`; });
-    ctx += "=== RULES ===\n";
-    ctx += "1. If the user asks a general question (like science, history, casual chat, etc.), answer it nicely first.\n";
-    ctx += "2. After answering the general question, politely remind them that your main focus is to help with MyTVETMARA room and facility bookings, check-ins, or schedules.\n";
-    ctx += "3. If they ask about bookings or system features, use the FAQ knowledge base directly.\n";
-    ctx += "4. Keep total response under 6 sentences. Use Bahasa Melayu if the user asks in Malay.\n";
-    return ctx;
+  function getMalaysiaTime() {
+  const now = new Date();
+  const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const formatterTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const formatterDay = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'long' }); 
+  
+  return {
+    date: formatterDate.format(now),
+    time: formatterTime.format(now),
+    day: formatterDay.format(now) // Output: "Sunday", "Monday", etc.
+  };
+}
+
+  let _botSupabaseClient = null;
+
+  async function getSupabaseClient() {
+    if (_botSupabaseClient) return _botSupabaseClient;
+    if (window._supabase && typeof window._supabase.from === 'function') return window._supabase;
+    if (window.supabaseClient && typeof window.supabaseClient.from === 'function') return window.supabaseClient;
+    if (window.supabase && typeof window.supabase.from === 'function') return window.supabase;
+
+    if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
+      await new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = resolve;
+        script.onerror = resolve;
+        document.head.appendChild(script);
+      });
+    }
+
+    try {
+      const create = window.supabase?.createClient || (typeof supabase !== 'undefined' ? supabase.createClient : null);
+      if (create) {
+        _botSupabaseClient = create(SB_URL, SB_KEY);
+        return _botSupabaseClient;
+      }
+    } catch (e) {
+      console.error("Supabase auto-init error:", e);
+    }
+    return null;
   }
 
-  let lastCallTime = 0;
-  const MIN_CALL_INTERVAL = 1500;
+  function buildSystemPrompt() {
+  const myTime = getMalaysiaTime();
+  let ctx = "You are CHITCHAT BOT, official assistant for MyTVETMARA e-Booking system.\n";
+  ctx += `Current Malaysia Date & Time: ${myTime.date} ${myTime.time}.\n`;
+  ctx += `Current Day: ${myTime.day}.\n`;
+  ctx += "Operating Hours: 08:00:00 to 17:00:00 (Sunday–Thursday). Closed outside these hours.\n\n";
 
+  ctx += "=== SEARCH RULES ===\n";
+  // ARAHAN BAHARU: Paksa guna masa SEKARANG jika user tidak beri tarikh/masa
+  ctx += "1. REAL-TIME STRICT RULE: If the user asks for available rooms WITHOUT specifying a date and time (e.g. 'cari bilik kosong'), you MUST strictly use the Current Malaysia Date & Time above. DO NOT guess or suggest future dates.\n";
+  ctx += "2. Operating Hours Rule: If the requested start_time is BEFORE 08:00:00 or AFTER 17:00:00, DO NOT search database. Instead, reply directly in text telling the user that facilities are closed at that hour.\n";
+  ctx += "3. If time is within operating hours, output ONLY this JSON format:\n";
+  ctx += '{"action": "SEARCH_ROOM", "booking_date": "YYYY-MM-DD", "start_time": "HH:MM:SS"}\n\n';
+
+  ctx += "=== FAQ KNOWLEDGE BASE ===\n";
+  FAQS.forEach((f, i) => { ctx += `FAQ ${i + 1} (${f.q.join(', ')}): ${f.a}\n`; });
+  return ctx;
+}
+
+  async function handleAIActions(actionObj) {
+    const supabase = await getSupabaseClient();
+    if (!supabase) return "⚠️ Database connection not found.";
+
+    const { action, booking_date, start_time } = actionObj;
+
+    // TAPISAN KETAT WAKTU OPERASI (08:00:00 HINGGA 17:00:00)
+    const hour = parseInt(start_time.split(':')[0], 10);
+    if (hour < 8 || hour >= 17) {
+      return `⏰ <strong>Waktu Operasi Ditutup!</strong><br>Kemudahan hanya boleh ditempah dan dibuka dari jam <strong>8:00 AM hingga 5:00 PM</strong> (Ahad–Khamis). Sila cuba lagi esok.`;
+    }
+
+    if (action === 'SEARCH_ROOM') {
+      // Susun nama hari (Tukar ke format BM jika database anda guna BM: 'ahad', 'isnin', dll)
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const dateObj = new Date(booking_date);
+      const dayName = days[dateObj.getDay()];
+
+      // Ambil format 5 aksara pertama (contoh: "08:00") untuk padanan jadual kelas
+      const timePrefix = start_time.substring(0, 5); 
+
+      // Lakukan 2 carian serentak (Bookings & Class Schedules)
+      const [bookingsRes, classesRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('room_name')
+          .eq('booking_date', booking_date)
+          .lte('start_time', start_time)
+          .gt('end_time', start_time),
+        supabase
+          .from('class_schedules')
+          .select('room')
+          .ilike('day', dayName)
+          .ilike('time', `%${timePrefix}%`) // Cari masa kelas yang sepadan
+      ]);
+
+      if (bookingsRes.error) return `⚠️ Ralat tempahan: ${bookingsRes.error.message}`;
+      if (classesRes.error) return `⚠️ Ralat jadual: ${classesRes.error.message}`;
+
+      const bookedRooms = (bookingsRes.data || []).map(b => b.room_name ? b.room_name.toLowerCase() : '');
+      const classRooms = (classesRes.data || []).map(c => c.room ? c.room.toLowerCase() : '');
+      
+      // Gabungkan senarai bilik yang telah dibooking DAN bilik yang ada kelas
+      const allUsedRooms = [...bookedRooms, ...classRooms];
+      
+      // Tapis bilik untuk tinggalkan yang kosong sahaja
+      const freeRooms = ALL_ROOMS.filter(r => !allUsedRooms.includes(r.toLowerCase()));
+
+      if (freeRooms.length === 0) {
+        return `❌ Maaf, **semua fasiliti sedang digunakan** pada ${booking_date} (${start_time}) oleh tempahan lain atau jadual kelas.`;
+      }
+
+      return `🟢 <strong>Status Terkini (${booking_date} @ ${start_time}):</strong><br>` +
+             `• ${freeRooms.map(r => r.toUpperCase()).join('<br>• ')}<br><br>` +
+             `📌 <em>Bilik ini disahkan bebas dari jadual kelas & tempahan. Tempah di: <strong>HOME → BOOKING SYSTEM</strong></em>`;
+    }
+
+    return "⚠️ Tindakan tidak sah.";
+  }
+  let lastCallTime = 0;
+  const MIN_CALL_INTERVAL = 0;
   async function callGemini(userMessage) {
     if (!GEMINI_API_KEY) return { text: "⚠️ API key not configured.", provider: 'none' };
     const now = Date.now();
@@ -77,30 +184,47 @@
           body: JSON.stringify({
             system_instruction: { parts: [{ text: buildSystemPrompt() }] },
             contents: [{ parts: [{ text: userMessage }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 2048, topP: 0.8 }
+            generationConfig: { temperature: 0.2, maxOutputTokens: 2048, topP: 0.8 }
           })
         });
         if (!response.ok) continue;
         const data = await response.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!text) continue;
+
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const actionData = JSON.parse(jsonMatch[0]);
+            if (actionData.action === 'SEARCH_ROOM') {
+              const actionResult = await handleAIActions(actionData);
+              return { text: actionResult, provider: model };
+            }
+          } catch (err) {
+            console.error("JSON parse error from AI:", err);
+          }
+        }
+
         return { text: text, provider: model };
       } catch (e) { continue; }
     }
     return { text: "⚠️ AI service currently unavailable.", provider: 'none' };
   }
 
+  // ============================================
+  // 🎨 DESIGN ASAL 100% (CSS, FONTS & LAYOUT)
+  // ============================================
   const css = `
 #rbxFab { position: fixed; bottom: 20px; right: 20px; z-index: 9998; width: 60px; height: 60px; border-radius: 50%; background: #0096B4; color: #fff; border: none; box-shadow: 0 4px 15px rgba(0, 150, 180, 0.4); font-size: 30px; display: flex; align-items: center; justify-content: center; cursor: grab; animation: rbxPulse 2s infinite; user-select: none; touch-action: none; }
 #rbxFab:active { cursor: grabbing; }
 @keyframes rbxPulse { 0% { box-shadow: 0 0 0 0 rgba(0, 150, 180, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(0, 150, 180, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 150, 180, 0); } }
-#rbxChat { position: fixed; bottom: 95px; right: 20px; z-index: 9999; width: 340px; max-width: calc(100vw - 32px); height: 480px; max-height: calc(100vh - 140px); background: #fff; border: 5px solid #393B3D; box-shadow: 10px 10px 0 rgba(0, 0, 0, .5); display: none; flex-direction: column; font-family: 'Poppins', sans-serif; }
+#rbxChat { position: fixed; bottom: 95px; right: 20px; z-index: 9999; width: 340px; max-width: calc(100vw - 32px); height: 500px; max-height: calc(100vh - 140px); background: #fff; border: 5px solid #393B3D; box-shadow: 10px 10px 0 rgba(0, 0, 0, .5); display: none; flex-direction: column; font-family: 'Poppins', sans-serif; }
 #rbxChat.open { display: flex; }
 #rbxChatHead { background: #393B3D; color: #FFC800; padding: 10px 14px; border-bottom: 4px solid #00A2FF; font-family: 'Bungee', cursive; font-size: 15px; display: flex; justify-content: space-between; align-items: center; cursor: grab; user-select: none; touch-action: none; flex-shrink: 0; }
 #rbxChatHead:active { cursor: grabbing; }
 #rbxChatClose { background: transparent; border: 0; color: #fff; font-size: 22px; cursor: pointer; font-family: 'Bungee', cursive; }
 #rbxChatBody { flex: 1; overflow-y: auto; padding: 12px; background: #f5f5f5; }
-.rbx-msg { margin-bottom: 10px; padding: 10px 12px; border: 3px solid #393B3D; box-shadow: 3px 3px 0 rgba(0, 0, 0, .2); font-size: 13px; line-height: 1.5; word-wrap: break-word; }
+.rbx-msg { margin-bottom: 10px; padding: 10px 12px; border: 3px solid #393B3D; box-shadow: 3px 3px 0 rgba(0, 0, 0, .2); font-size: 12.5px; line-height: 1.4; word-wrap: break-word; overflow-x: hidden; }
 .rbx-msg.bot { background: #fff; color: #000; }
 .rbx-msg.user { background: #fcc500; color: #000; font-weight: bold; }
 .rbx-msg.ai { background: #e8f7ff; color: #000; border-color: #0096B4; box-shadow: 3px 3px 0 rgba(0, 150, 180, 0.3); }
@@ -147,9 +271,6 @@
   const form = panel.querySelector('#rbxChatForm');
   const input = panel.querySelector('#rbxChatInput');
 
-  // ============================================
-  // 🖱️ DRAG & DROP LOGIC (FAB & CHAT WINDOW)
-  // ============================================
   function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
 
   let dragActive = false, dragStarted = false, startX = 0, startY = 0, origX = 0, origY = 0, ignoreFabClick = false;
@@ -273,22 +394,10 @@
     return false;
   }
 
-   function getSupabaseClient() {
-    // Semak pelbagai variasi nama pembolehubah Supabase yang biasa digunakan
-    if (window.supabase && typeof window.supabase.auth === 'object') return window.supabase;
-    if (window.supabaseClient && typeof window.supabaseClient.auth === 'object') return window.supabaseClient;
-    if (window.sb && typeof window.sb.auth === 'object') return window.sb;
-    
-    // Jika supabase diisytiharkan di dalam objek global lain
-    if (window.SUPABASE_CLIENT && typeof window.SUPABASE_CLIENT.auth === 'object') return window.SUPABASE_CLIENT;
-
-    return null;
-  }
-
   async function fetchScheduleFromDatabase(className) {
     showTyping();
     try {
-      const supabase = getSupabaseClient();
+      const supabase = await getSupabaseClient();
       if (!supabase) { hideTyping(); addMsg("⚠️ Database connection not found.", 'bot'); addChips(['⬅️ Back to Menu']); return; }
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) { hideTyping(); addMsg("🔒 Please log in first.", 'bot'); addChips(['⬅️ Back to Menu']); return; }
