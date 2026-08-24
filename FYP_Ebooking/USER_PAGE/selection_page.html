@@ -26,22 +26,87 @@
             <h2 class="font-bungee text-dark mb-5">CHOOSE YOUR DESTINATION</h2>
             <div class="row g-4 justify-content-center text-uppercase">
                  <div class="col-md-4">
-                    <button class="btn btn-roblox btn-success w-100 py-4" onclick="window.location.href='Dfk/roomdfk_selection.html'" style="background-color: #f48686;">
+                    <button class="btn btn-roblox btn-success w-100 py-4" onclick="window.location.href='Dfk/BookingDfk.html'" style="background-color: #f48686;">
                         <h3 class="font-bungee mb-0">DFK's BUILDING</h3>
                     </button>
                 </div>
                 <div class="col-md-4">
-                    <button class="btn btn-roblox btn-success w-100 py-4" onclick="window.location.href='SportFacility/SFselection.html'" style="background-color:  #d372e8;">
+                    <button class="btn btn-roblox btn-success w-100 py-4" onclick="window.location.href='SportFacility/BookingSF.html'" style="background-color:  #d372e8;">
                         <h3 class="font-bungee mb-0">SPORT FASILITY</h3>
                     </button>
                 </div>
                  <div class="col-md-4">
-                    <button class="btn btn-roblox btn-success w-100 py-4" onclick="window.location.href='Library/libraryselection.html'" style="background-color: #ee47b1;">
+                    <button class="btn btn-roblox btn-success w-100 py-4" onclick="window.location.href='Library/BookingLibrary.html'" style="background-color: #ee47b1;">
                         <h3 class="font-bungee mb-0">LIBRARY</h3>
                     </button>
                 </div>
             </div> 
         </div>
     </div>
+    </body>
+    <script>
+    // ==========================================
+    // 1. SKRIP VIDEO BACKGROUND SMOOTH TRANSITION (BARU)
+    // ==========================================
+    const bgVideo = document.getElementById('myVideo');
+
+    if (bgVideo) {
+        // Dapatkan masa terakhir video dari halaman sebelum ini
+        const savedTime = localStorage.getItem('bgVideoTime');
+        if (savedTime) {
+            bgVideo.currentTime = parseFloat(savedTime);
+        }
+
+        // Bila video sedia dimainkan, munculkan secara 'Smooth'
+        bgVideo.addEventListener('loadeddata', function() {
+            bgVideo.classList.add('loaded');
+        });
+
+        // Jika video telah 'cached' dalam browser
+        if (bgVideo.readyState >= 3) {
+            bgVideo.classList.add('loaded');
+        }
+
+        // Simpan masa video secara berkala sebelum pengguna tukar page
+        setInterval(() => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        }, 500);
+
+        // Simpan masa tepat sejurus sebelum halaman ditukar
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        });
+    }
+    </script>
+    <!-- ==========================================
+     3. SKRIP FAQ CHATBOT LOADER
+     ========================================== -->
+<script data-faq-loader="true">
+(function () {
+    if (window.__faqChatbotLoaderBound) return;
+    window.__faqChatbotLoaderBound = true;
+
+    var candidates = ['./faq-chatbot.js', '../faq-chatbot.js', '../../faq-chatbot.js', '../../../faq-chatbot.js'];
+    var index = 0;
+
+    function tryLoad() {
+        if (index >= candidates.length) return;
+        var script = document.createElement('script');
+        script.src = candidates[index];
+        script.onload = function () {
+            if (window.__rbxFaqLoaded) {
+                console.log('FAQ chatbot loaded');
+            }
+        };
+        script.onerror = function () {
+            index += 1;
+            tryLoad();
+        };
+        document.head.appendChild(script);
+    }
+
+    tryLoad();
+})();
+</script>
 </body>
 </html>
