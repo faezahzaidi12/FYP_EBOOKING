@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>HOME</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Link ke style_index.css dalam folder yang sama -->
+    <link rel="stylesheet" href="/USER_PAGE/style_index.css">
+</head>
+<body>
+     <video autoplay muted loop id="myVideo" preload="auto">
+    <source src="mainBG.mp4" type="video/mp4">
+</video>
+   <nav class="navbar navbar-dark p-3 shadow">
+    <div class="container text-uppercase d-flex align-items-center">
+        
+        <!-- SEBELAH KIRI: Tajuk -->
+        <a class="navbar-brand font-bungee m-0 text-white" href="#">
+            <i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>HOME DASHBOARD</a>
+
+        <!-- SEBELAH KANAN: Bungkus DUA butang rapat-rapat -->
+        <div class="d-flex gap-2 ms-auto">
+            <button class="btn btn-primary font-bungee border-2 border-white" onclick="window.location.href='../index.html'">LOG OUT</button>
+            <button class="btn btn-danger btn-sm font-bungee border-2 border-white" data-bs-toggle="modal" data-bs-target="#reportModal">REPORT</button>
+        </div>
+
+    </div>
+</nav>
+
+    <div class="container text-center">
+        <div class="roblox-card1 w-100 mt-0" style="max-width: 800px; margin: auto;">
+            <h1 class="font-bungee text-dark">WELCOME BACK, <span id="userDisp">PLAYER</span>!</h1>
+            <!-- ID userAvatar untuk avatar dinamik dari DiceBear [37] -->
+            <img id="userAvatar" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Isma" class="my-4" style="width: 150px; border: 5px solid var(--roblox-dark);">
+            
+            <div class="row g-3 text-uppercase">
+                <div class="col-md-6">
+                    <div class="btn-roblox card p-3 border-4 border-dark shadow" style="background: white; transition: 0.3s; cursor: pointer;" onclick="window.location.href='UserDetail.html'">
+                        <h4 class="font-bungee">MY STATUS</h4>
+                        <p class="fw-bold text-success"><i class="bi bi-check-circle"></i> STUDENT </p>
+                    </div>
+                </div>
+
+                <!-- PENDING CHECK-IN -->
+                <div class="col-md-6">
+                    <!-- DIKEMASKINI: Pautan asal yang sangat ringkas dan kemas tanpa nama subfolder bertindih [28, 35] -->
+                    <div class="btn-roblox card p-4 border-4 border-dark shadow" id="checkInBox" style="background: white; transition: 0.3s; cursor: pointer;" onclick="window.location.href='USER_PAGE/check_in.html'">
+                        <h4 class="font-bungee">PENDING CHECK-IN</h4>
+                        <p class="fw-bold mb-0" id="checkInStatus" style="color: #ff8f00;">
+                            <i class="bi bi-exclamation-triangle-fill"></i> 1 ROOM WAITING
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIKEMASKINI: Pautan asal yang sangat ringkas dan kemas tanpa nama subfolder bertindih [28, 35] -->
+            <button class="btn btn-roblox btn-success w-100 py-3 mt-4 fs-3 text-white" onclick="window.location.href='/USER_PAGE/selection_page.html'">
+                <i class="bi bi-calendar-check"></i> GO TO BOOKING SYSTEM
+            </button>
+        </div>
+    </div>
+
+<!-- ================= POP-UP CARD ADUAN / REPORT ================= -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-5 border-dark rounded-0 shadow-lg">
+            
+            <!-- Header Modal -->
+            <div class="modal-header text-white border-0"  style="background-color: #2452db;">
+                <h5 class="modal-title font-bungee text-uppercase">
+                    <i class="bi bi-chat-left-dots-fill me-2"></i> MAINTENANCE REPORT</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Body Modal (Borang) -->
+            <div class="modal-body text-uppercase">
+                <p class="small text-muted fw-bold mb-3">Sila nyatakan aduan kerosakan atau masalah anda di bawah:</p>
+
+                <!-- Kategori -->
+                <form id="mrForm" class="mr-body" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="mr-label">Room</label>
+                         <input type="text" id="mrRoom" class="form-control border-2.5 border-dark py-2.5 height-100"">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="mr-label" for="mrCategory">Issue Category <span class="mr-req">*</span></label>
+                        <select id="mrCategory" class="form-select mr-input" required>
+                            <option value="">-- Select --</option>
+                            <option>Air Conditioner</option>
+                            <option>Projector</option>
+                            <option>Whiteboard</option>
+                            <option>Chair</option>
+                            <option>Table</option>
+                            <option>Lighting</option>
+                            <option>Electrical</option>
+                            <option>Internet</option>
+                            <option>Door / Lock</option>
+                            <option>Cleanliness</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="mr-label">Severity <span class="mr-req">*</span></label>
+                        <div class="mr-severity">
+                            <label class="mr-radio sev-low"><input type="radio" name="severity" value="Low" required> <span>LOW</span></label>
+                            <label class="mr-radio sev-med"><input type="radio" name="severity" value="Medium"> <span>MEDIUM</span></label>
+                            <label class="mr-radio sev-high"><input type="radio" name="severity" value="High"> <span>HIGH</span></label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="mr-label" for="mrDesc">Description <span class="mr-req">*</span></label>
+                        <textarea id="mrDesc" class="form-control mr-input" rows="5" minlength="20" maxlength="1000" placeholder="Describe the issue in detail..." required></textarea>
+                        <small class="mr-hint"><span id="mrDescCount">0</span> / 1000 (minimum 20)</small>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="mr-label">Upload Images <small class="text-muted">(JPG/PNG/JPEG, max 5 files, 10MB each)</small></label>
+                        <div class="mr-upload">
+                            <input type="file" id="myFileInput" style="display: none;" accept="image/*" multiple>
+                            <input type="file" id="mrFiles" accept="image/jpeg,image/png,image/jpg" multiple hidden>
+                           <button type="button" class="btn btn-roblox btn-primary" onclick="document.getElementById('myFileInput').click()">CHOOSE IMAGES</button>
+                            <div class="mr-previews" id="mrPreviews"></div>
+                        </div>
+                </div>
+                <p></p>
+
+                <div class="mr-actions">
+                    <button type="button" class="btn btn-roblox btn-light" id="mrCancel">CANCEL</button>
+                    <button type="submit" class="btn btn-roblox btn-success text-white" id="mrSubmit"><i class="bi bi-send-fill"></i> SUBMIT REPORT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 1. TAMBAH BARIS NI KAT SINI (Sangat Penting!) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 2. Baru ikuti script Isma macam biasa -->
+   <script>
+    // ==========================================
+    // 1. SKRIP VIDEO BACKGROUND SMOOTH TRANSITION (BARU)
+    // ==========================================
+    const bgVideo = document.getElementById('myVideo');
+
+    if (bgVideo) {
+        // Dapatkan masa terakhir video dari halaman sebelum ini
+        const savedTime = localStorage.getItem('bgVideoTime');
+        if (savedTime) {
+            bgVideo.currentTime = parseFloat(savedTime);
+        }
+
+        // Bila video sedia dimainkan, munculkan secara 'Smooth'
+        bgVideo.addEventListener('loadeddata', function() {
+            bgVideo.classList.add('loaded');
+        });
+
+        // Jika video telah 'cached' dalam browser
+        if (bgVideo.readyState >= 3) {
+            bgVideo.classList.add('loaded');
+        }
+
+        // Simpan masa video secara berkala sebelum pengguna tukar page
+        setInterval(() => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        }, 500);
+
+        // Simpan masa tepat sejurus sebelum halaman ditukar
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        });
+    }
+
+    // ==========================================
+    // 2. SKRIP PROFIL USER & CHECK-IN STATUS (ASAL)
+    // ==========================================
+    const username = localStorage.getItem('currentUser') || 'USER';
+    document.getElementById('userDisp').innerText = username;
+    
+    document.getElementById('userAvatar').src = 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + username;
+
+    const hasPendingBooking = true; 
+    const statusElement = document.getElementById('checkInStatus');
+    const boxElement = document.getElementById('checkInBox');
+
+    if (hasPendingBooking) {
+        statusElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> DFK 1 WAITING';
+        boxElement.style.backgroundColor = "#fff3cd"; 
+        boxElement.classList.add('animate-pulse');
+    } else {
+        statusElement.innerHTML = '<i class="bi bi-check-circle-fill"></i> NO PENDING';
+        statusElement.style.color = "#198754"; 
+        boxElement.style.backgroundColor = "white";
+    }
+
+    function sendReport() {
+        const category = document.getElementById('reportCategory').value;
+        const message = document.getElementById('reportMessage').value;
+
+        if (!category || !message) {
+            alert("SILA ISI KATEGORI DAN MESEJ ADUAN!");
+            return;
+        }
+
+        alert("ADUAN BERJAYA DIHANTAR! Admin akan menyemak aduan anda.");
+
+        document.getElementById('reportCategory').value = "";
+        document.getElementById('reportMessage').value = "";
+
+        const modalEl = document.getElementById('reportModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+    }
+
+    // ==========================================
+    // 3. SKRIP MAINTENANCE REPORT FORM (ASAL)
+    // ==========================================
+    (function () {
+        'use strict';
+
+        const MAX_FILES = 5;
+        const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+        const ALLOWED = ['image/jpeg', 'image/png', 'image/jpg'];
+        const LAST_SUBMIT_KEY = 'mr_last_submit_ts';
+
+        const $ = (id) => document.getElementById(id);
+        let selectedFiles = [];
+
+        function autofill() {
+            const name = localStorage.getItem('currentUser') || 'Player One';
+            const sid = localStorage.getItem('currentStudentId') || 'S00000';
+            const ref = localStorage.getItem('currentBookingRef') || ('BK-' + Date.now().toString().slice(-6));
+            const room = localStorage.getItem('currentRoom') || 'N/A';
+
+            if ($('mrName')) $('mrName').value = name;
+            if ($('mrSid')) $('mrSid').value = sid;
+            if ($('mrRef')) $('mrRef').value = ref;
+            if ($('mrRoom')) $('mrRoom').value = room;
+            if ($('mrTime')) $('mrTime').value = new Date().toLocaleString();
+        }
+
+        function wireSeverity() {
+            document.querySelectorAll('.mr-radio').forEach(label => {
+                label.addEventListener('click', () => {
+                    document.querySelectorAll('.mr-radio').forEach(l => l.classList.remove('selected'));
+                    label.classList.add('selected');
+                    const input = label.querySelector('input');
+                    if (input) input.checked = true;
+                });
+            });
+        }
+
+        function wireDesc() {
+            const desc = $('mrDesc');
+            const count = $('mrDescCount');
+            if (desc && count) {
+                desc.addEventListener('input', () => count.textContent = desc.value.length);
+            }
+        }
+
+        function wireFiles() {
+            const input = $('mrFiles');
+            const pickBtn = $('mrPickBtn');
+            if (pickBtn && input) {
+                pickBtn.addEventListener('click', () => input.click());
+                input.addEventListener('change', (e) => {
+                    const files = Array.from(e.target.files || []);
+                    for (const f of files) {
+                        if (selectedFiles.length >= MAX_FILES) { alert('Maximum ' + MAX_FILES + ' images.'); break; }
+                        if (!ALLOWED.includes(f.type)) { alert('Only JPG/PNG allowed: ' + f.name); continue; }
+                        if (f.size > MAX_SIZE) { alert('Max 10MB: ' + f.name); continue; }
+                        selectedFiles.push(f);
+                    }
+                    input.value = '';
+                    renderPreviews();
+                });
+            }
+        }
+
+        function renderPreviews() {
+            const wrap = $('mrPreviews');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            selectedFiles.forEach((f, i) => {
+                const url = URL.createObjectURL(f);
+                const div = document.createElement('div');
+                div.className = 'mr-thumb';
+                div.innerHTML = `<img src="${url}" alt=""><button type="button" aria-label="Remove">×</button>`;
+                div.querySelector('button').onclick = () => {
+                    selectedFiles.splice(i, 1);
+                    renderPreviews();
+                };
+                wrap.appendChild(div);
+            });
+        }
+
+        function modal({ title, body, buttons, success }) {
+            const back = document.createElement('div');
+            back.className = 'mr-modal-backdrop';
+            back.innerHTML = `
+                <div class="mr-modal" role="dialog" aria-modal="true">
+                    <div class="mr-modal-head ${success ? 'success' : ''}">${title}</div>
+                    <div class="mr-modal-body">${body}</div>
+                    <div class="mr-modal-foot"></div>
+                </div>`;
+            const foot = back.querySelector('.mr-modal-foot');
+            buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-roblox ' + (b.variant || 'btn-light');
+                if (b.variant && b.variant.includes('success')) btn.classList.add('text-white');
+                btn.textContent = b.label;
+                btn.onclick = () => { b.onClick && b.onClick(); back.remove(); };
+                foot.appendChild(btn);
+            });
+            const onKey = (e) => { if (e.key === 'Escape') { back.remove(); document.removeEventListener('keydown', onKey); } };
+            document.addEventListener('keydown', onKey);
+            document.body.appendChild(back);
+            return back;
+        }
+
+        function validate() {
+            const errors = [];
+            if (!$('mrCategory') || !$('mrCategory').value) errors.push('Select an issue category.');
+            if (!document.querySelector('input[name="severity"]:checked')) errors.push('Select severity.');
+            const desc = $('mrDesc') ? $('mrDesc').value.trim() : '';
+            if (desc.length < 20) errors.push('Description must be at least 20 characters.');
+            return errors;
+        }
+
+        async function uploadImages(refId) {
+            if (typeof window.supabaseClient === 'undefined' || !selectedFiles.length) return [];
+            const urls = [];
+            for (const f of selectedFiles) {
+                const path = `${refId}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+                try {
+                    const { error } = await window.supabaseClient.storage
+                        .from('maintenance-images').upload(path, f);
+                    if (!error) {
+                        const { data } = window.supabaseClient.storage
+                            .from('maintenance-images').getPublicUrl(path);
+                        urls.push(data.publicUrl);
+                    }
+                } catch (e) { console.warn('Upload failed', e); }
+            }
+            return urls;
+        }
+
+        async function submitReport() {
+            const refId = $('mrRef') ? $('mrRef').value : 'BK-000';
+            const payload = {
+                reference_id: refId,
+                booking_id: refId,
+                student_id: $('mrSid') ? $('mrSid').value : '',
+                student_name: $('mrName') ? $('mrName').value : '',
+                room: $('mrRoom') ? $('mrRoom').value : '',
+                category: $('mrCategory') ? $('mrCategory').value : '',
+                severity: document.querySelector('input[name="severity"]:checked') ? document.querySelector('input[name="severity"]:checked').value : 'Low',
+                description: $('mrDesc') ? $('mrDesc').value.trim() : '',
+                image_urls: [],
+                report_time: new Date().toISOString(),
+                status: 'Pending',
+                admin_note: null
+            };
+
+            try {
+                payload.image_urls = await uploadImages(refId);
+                if (typeof window.supabaseClient !== 'undefined') {
+                    await window.supabaseClient.from('maintenance_reports').insert(payload);
+                } else {
+                    console.info('[MR] Supabase not initialised — payload:', payload);
+                }
+            } catch (e) {
+                console.error('Submit error', e);
+            }
+
+            localStorage.setItem(LAST_SUBMIT_KEY, Date.now().toString());
+            showSuccess();
+        }
+
+        function showSuccess() {
+            modal({
+                success: true,
+                title: 'REPORT SUBMITTED',
+                body: `<div class="mr-icon"><i class="bi bi-check-circle-fill"></i></div>
+                       <h5 class="font-bungee mb-2">Report Submitted Successfully</h5>
+                       <p class="mb-0 small">Thank you. Your maintenance report has been sent to the administrator.</p>`,
+                buttons: [
+                    { label: 'OK', variant: 'btn-success', onClick: () => alert('DEMO: redirect to ../home.html') }
+                ]
+            });
+        }
+
+        function confirmSubmit() {
+            modal({
+                title: 'SUBMIT MAINTENANCE REPORT?',
+                body: `<p class="mb-0">Are you sure you want to submit this maintenance report?<br><small class="text-muted">You cannot edit it after submission.</small></p>`,
+                buttons: [
+                    { label: 'CANCEL', variant: 'btn-light' },
+                    { label: 'SUBMIT', variant: 'btn-success', onClick: submitReport }
+                ]
+            });
+        }
+
+        function wireForm() {
+            if ($('mrCancel')) {
+                $('mrCancel').addEventListener('click', () => {
+                    if (confirm('Discard this report?')) alert('DEMO: redirect to ../home.html');
+                });
+            }
+
+            if ($('mrForm')) {
+                $('mrForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const errs = validate();
+                    if (errs.length) { alert(errs.join('\n')); return; }
+
+                    const last = parseInt(localStorage.getItem(LAST_SUBMIT_KEY) || '0', 10);
+                    if (last && Date.now() - last < 5 * 60 * 1000) {
+                        alert('Please wait before submitting another report (5-minute cooldown).');
+                        return;
+                    }
+                    confirmSubmit();
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            autofill();
+            wireSeverity();
+            wireDesc();
+            wireFiles();
+            wireForm();
+            setInterval(() => { if ($('mrTime')) $('mrTime').value = new Date().toLocaleString(); }, 30000);
+        });
+    })();
+
+    // ==========================================
+    // 4. SKRIP FAQ CHATBOT LOADER (ASAL)
+    // ==========================================
+    (function () {
+        if (window.__faqChatbotLoaderBound) return;
+        window.__faqChatbotLoaderBound = true;
+
+        var candidates = ['./faq-chatbot.js', '../faq-chatbot.js', '../../faq-chatbot.js', '../../../faq-chatbot.js'];
+        var index = 0;
+
+        function tryLoad() {
+            if (index >= candidates.length) return;
+            var script = document.createElement('script');
+            script.src = candidates[index];
+            script.onload = function () {
+                if (window.__rbxFaqLoaded) {
+                    console.log('FAQ chatbot loaded');
+                }
+            };
+            script.onerror = function () {
+                index += 1;
+                tryLoad();
+            };
+            document.head.appendChild(script);
+        }
+
+        tryLoad();
+    })();
+</script>
+   
+</body>
+</html>
+   </script>
+   <!-- WAJIB ADA UNTUK POP-UP BOOTSTRAP BERFUNGSI -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+   
+</body>
+</html>

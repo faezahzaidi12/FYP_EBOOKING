@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>LOG IN</title>
+    <!-- Bootstrap and Font Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Link ke style_index.css yang berada di dalam folder yang sama -->
+    <link rel="stylesheet" href="/USER_PAGE/style_index.css">
+
+    <!-- REQUIRED: Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <link rel="stylesheet" href="footer.css">
+</head>
+<body>
+    <!-- Video Background -->
+    <video autoplay muted loop id="myVideo">
+        <source src="mainBG.mp4" type="video/mp4">
+    </video>
+
+    <!-- Overlay -->
+    <div class="video-overlay"></div>
+    <div class="roblox-card text-center text-uppercase">
+        <div class="logo-frame">
+            <img src="logo_tvetmara.png" style="width: 100%;">
+        </div>
+        <div class="inner-container">
+            <h2 class="font-bungee mb-1">LOG IN</h2>
+            <p class="small text-muted mb-4 fw-bold">MYTVETMARA e-BOOKING</p>
+            <div class="text-start mb-3">
+                <label class="fw-bold small">EMAIL :</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="EMAIL">
+            </div>
+            <div class="text-start mb-4">
+                <label class="fw-bold small">PASSWORD:</label>
+                <input type="password" id="loginPass" class="form-control" placeholder="PASSWORD">
+            </div>
+
+            <!-- Butang LET'S GO memanggil fungsi doLogin() -->
+            <button class="btn btn-roblox btn-success w-100 py-3 fs-3 text-white mb-3" onclick="doLogin()">LET'S GO!</button>
+            <button class="btn btn-roblox btn-primary w-100 py-2" onclick="window.location.href='Register.html'">SIGN UP</button>
+        </div>
+    </div>
+
+   <script>
+    // ==========================================
+    // 1. SKRIP VIDEO BACKGROUND SMOOTH TRANSITION
+    // ==========================================
+    const bgVideo = document.getElementById('myVideo');
+
+    if (bgVideo) {
+        const savedTime = localStorage.getItem('bgVideoTime');
+        if (savedTime) {
+            bgVideo.currentTime = parseFloat(savedTime);
+        }
+
+        bgVideo.addEventListener('loadeddata', function() {
+            bgVideo.classList.add('loaded');
+        });
+
+        if (bgVideo.readyState >= 3) {
+            bgVideo.classList.add('loaded');
+        }
+
+        setInterval(() => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        }, 500);
+
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        });
+    }
+
+    // ==========================================
+    // 2. SKRIP SUPABASE & LOG MASUK / LOGIN
+    // ==========================================
+    const _supabase = window.supabaseClient || (window.supabase ? window.supabase.createClient('https://doyyrhhscdpchuvpancq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A') : null);
+
+    // FUNGSI LOG MASUK UTAMA
+    async function doLogin() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPass').value;
+
+        if (!email || !password) {
+            alert("PLEASE FILL ALL FIELDS!");
+            return;
+        }
+
+        // =========================================================
+        //  1. TETAPKAN EMEL & PASSWORD KHAS ADMIN DI SINI
+        // =========================================================
+        const ADMIN_EMAIL = "admin@gmail.com"; 
+        const ADMIN_PASS  = "admin123";       
+
+        // SEMAKAN ADMIN (Terus masuk tanpa perlu Sign Up Supabase)
+        if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASS) {
+            
+            // Simpan maklumat akaun Admin ke LocalStorage
+            const adminData = {
+                id: "admin-001",
+                fullname: "ADMINISTRATOR",
+                username: "ADMIN",
+                email: ADMIN_EMAIL,
+                role: "admin"
+            };
+            localStorage.setItem('userAccount', JSON.stringify(adminData));
+            localStorage.setItem('currentUser', adminData.username);
+            localStorage.setItem('currentUserId', adminData.id);
+
+            alert('Login Successful! Welcome Admin.');
+            window.location.href = '/ADMIN_PAGE/home_admin.html'; // Path ke page admin
+            return; // Hentikan fungsi di sini supaya tidak teruskan ke Supabase
+        }
+
+        // =========================================================
+        //  2. JIKA BUKAN ADMIN, LOG IN DENGAN SUPABASE (PELAJAR BIASA)
+        // =========================================================
+        const { data, error } = await _supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            alert("Login Gagal: " + error.message);
+            console.error(error);
+        } else {
+            const user = data.user;
+            const metadata = user.user_metadata || {};
+
+            // Susun maklumat pengguna daripada Supabase metadata
+            const userData = {
+                id: user.id,
+                fullname: metadata.fullname || metadata.full_name || metadata.display_name || "NAMA PELAJAR",
+                username: metadata.username || metadata.display_name || user.email.split('@')[0].toUpperCase(),
+                ic: metadata.ic || metadata.ic_number || "000000-00-0000",
+                email: user.email,
+                phone: metadata.phone || metadata.phone_number || "-"
+            };
+
+            // Simpan ke LocalStorage
+            localStorage.setItem('userAccount', JSON.stringify(userData));
+            localStorage.setItem('currentUser', userData.username);
+            localStorage.setItem('currentUserId', user.id);
+            
+            alert('Login Successful! Welcome back.');
+            window.location.href = 'home.html'; // Page untuk pelajar biasa
+        }
+    }
+</script>
+
+<!-- ==========================================
+     3. SKRIP FAQ CHATBOT LOADER
+     ========================================== -->
+<script data-faq-loader="true">
+(function () {
+    if (window.__faqChatbotLoaderBound) return;
+    window.__faqChatbotLoaderBound = true;
+
+    var candidates = ['./faq-chatbot.js', '../faq-chatbot.js', '../../faq-chatbot.js', '../../../faq-chatbot.js'];
+    var index = 0;
+
+    function tryLoad() {
+        if (index >= candidates.length) return;
+        var script = document.createElement('script');
+        script.src = candidates[index];
+        script.onload = function () {
+            if (window.__rbxFaqLoaded) {
+                console.log('FAQ chatbot loaded');
+            }
+        };
+        script.onerror = function () {
+            index += 1;
+            tryLoad();
+        };
+        document.head.appendChild(script);
+    }
+
+    tryLoad();
+})();
+</script>
+</html>
