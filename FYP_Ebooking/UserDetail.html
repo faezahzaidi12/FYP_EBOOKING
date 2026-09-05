@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLAYER PROFILE</title>
+    <!-- Framework & Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Link ke Fail CSS Utama & CSS Khas Profile -->
+    <link rel="stylesheet" href="style_index.css">
+    <link rel="stylesheet" href="UserDetail.css">
+
+    <!-- Supabase JS SDK & Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+</head>
+<body>
+    <video autoplay muted loop id="myVideo">
+        <source src="mainBG.mp4" type="video/mp4">
+    </video>
+
+    <nav class="navbar navbar-dark p-3 shadow">
+        <div class="container text-uppercase">
+            <a class="navbar-brand font-bungee" href="#">
+                <i class="bi bi-person-vcard-fill text-warning"></i> PLAYER DOSSIER
+            </a>
+            <button class="btn btn-primary btn-sm font-bungee border-2 border-white" onclick="window.location.href='home.html'">
+                <i class="bi bi-arrow-left"></i> BACK TO HOME
+            </button>
+        </div>
+    </nav>
+
+    <!-- Content Utama -->
+    <div class="container profile-container text-uppercase pb-5">
+        <div class="profile-card">
+            
+            <!-- Avatar & Username Header -->
+            <div class="text-center mb-4">
+                <div class="avatar-box-lg">
+                    <img id="pAvatar" src="" style="width: 100%; height: 100%;">
+                </div>
+                <h2 class="font-bungee text-dark mb-1" id="pUserHeader">LOADING...</h2>
+                <span class="badge bg-success border-2 border-dark px-3 py-2 fs-6">
+                    <i class="bi bi-patch-check-fill"></i> VERIFIED PLAYER
+                </span>
+            </div>
+
+            <hr class="border-3 border-dark mb-4">
+
+            <!-- Senarai Maklumat Pendaftaran -->
+            <!-- 1. FULL NAME (Kunci / Tak Boleh Edit) -->
+            <div class="info-row d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-bold text-muted me-2"><i class="bi bi-person-fill text-primary"></i> FULL NAME:</span>
+                <span class="fw-bold text-dark fs-6" id="pFullName">---</span>
+            </div>
+
+            <!-- 2. IC NUMBER (Kunci / Tak Boleh Edit) -->
+            <div class="info-row d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-bold text-muted me-2"><i class="bi bi-card-heading text-primary"></i> IC NUMBER:</span>
+                <span class="fw-bold text-dark fs-6" id="pIC">---</span>
+            </div>
+
+            <!-- 3. EMAIL (BOLEH EDIT) -->
+            <div class="info-row d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-bold text-muted me-2" style="min-width: 100px;"><i class="bi bi-envelope-fill text-primary"></i> EMAIL:</span>
+                <input type="email" id="pEmailInput" class="form-control border-2 border-dark text-end fw-bold py-1" style="background: white;" placeholder="ENTER EMAIL">
+            </div>
+
+            <!-- 4. PHONE NO (BOLEH EDIT) -->
+            <div class="info-row d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-bold text-muted me-2" style="min-width: 120px;"><i class="bi bi-telephone-fill text-primary"></i> PHONE NO:</span>
+                <input type="text" id="pPhoneInput" class="form-control border-2 border-dark text-end fw-bold py-1" style="background: white;" placeholder="ENTER PHONE">
+            </div>
+
+            <!-- BUTANG SIMPAN & PATAH BALIK -->
+            <div class="mt-4 pt-2">
+                <button class="btn btn-roblox btn-success w-100 py-3 fs-5" onclick="saveProfileChanges()">
+                    <i class="bi bi-check-circle-fill me-2"></i> SAVE CHANGES
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script Tarik Data dari LocalStorage -->
+    <script>
+    window.onload = function() {
+        // Tarik data pengguna yang disimpan dari index page semasa Login
+        const savedData = JSON.parse(localStorage.getItem('userAccount'));
+
+        if (savedData) {
+            const username = savedData.username || savedData.fullname || "PLAYER";
+            
+            // Paparkan data pada paparan HTML
+            document.getElementById('pUserHeader').innerText = username;
+            document.getElementById('pFullName').innerText = savedData.fullname || "---";
+            document.getElementById('pIC').innerText = savedData.ic || "---";
+            document.getElementById('pEmailInput').value = savedData.email || "";
+            document.getElementById('pPhoneInput').value = savedData.phone || "";
+
+            // Avatar berdasarkan username
+            document.getElementById('pAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(username)}`;
+        } else {
+            // Jika pengguna belum log masuk
+            alert("Sila log masuk terlebih dahulu!");
+            window.location.href = "index.html";
+        }
+    };
+
+    // Fungsi Simpan Perubahan Emel & Telefon
+    function saveProfileChanges() {
+        const newEmail = document.getElementById('pEmailInput').value.trim();
+        const newPhone = document.getElementById('pPhoneInput').value.trim();
+
+        if (!newEmail || !newPhone) {
+            alert("SILA ISI KEDUA-DUA EMEL DAN NOMBOR TELEFON!");
+            return;
+        }
+
+        // Ambil data akaun semasa
+        let savedData = JSON.parse(localStorage.getItem('userAccount')) || {};
+
+        // Kemaskini email dan phone sahaja
+        savedData.email = newEmail;
+        savedData.phone = newPhone;
+
+        // Simpan semula ke LocalStorage
+        localStorage.setItem('userAccount', JSON.stringify(savedData));
+
+        alert("PROFIL BERJAYA DIKEMASKINI!");
+        window.location.href = 'UserDetail.html';
+    }
+    </script>
+</body>
+</html>

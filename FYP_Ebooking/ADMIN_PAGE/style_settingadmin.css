@@ -1,0 +1,46 @@
+/* style_admin_rooms.css */
+
+.room-asset-card {
+    border: 4px solid #393B3D;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 8px 8px 0px rgba(0,0,0,0.1);
+    transition: 0.2s;
+}
+
+.room-asset-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
+}
+
+.room-preview-sm {
+    height: 150px;
+    background: #ddd;
+    position: relative;
+    border-bottom: 4px solid #393B3D;
+}
+
+.room-preview-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.status-tag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: 2px solid black;
+    font-family: 'Bungee';
+}
+
+.asset-mini-list {
+    background: #f8f9fa;
+    padding: 15px;
+    border: 2px dashed #ccc;
+}
+
+.form-control {
+    border-radius: 0;
+    padding: 10px;
+}

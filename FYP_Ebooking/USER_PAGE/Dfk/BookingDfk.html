@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CLASSROOM BOOKING</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Fail CSS -->
+    <link rel="stylesheet" href="Dfk.css">
+</head>
+<body>
+    <video autoplay muted loop id="myVideo">
+        <source src="../../mainBG.mp4" type="video/mp4">
+    </video>
+    <nav class="navbar navbar-dark p-3 shadow">
+        <div class="container text-uppercase">
+            <a class="navbar-brand font-bungee text-white" href="#"><i class="bi bi-calendar-check"></i> CLASSROOM BOOKING</a>
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-primary btn-sm font-bungee border-2 border-white" onclick="window.location.href='../../../home.html'">BACK TO LOBBY</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="bk-wrap">
+
+            <div class="bk-header rbx-in">
+                <h1 class="font-bungee mb-1">BOOK A CLASSROOM</h1>
+                <p class="mb-0 small">Select a classroom below to reserve your slot.</p>
+            </div>
+
+            <!-- QUOTA STRIP -->
+            <div class="bk-quota">
+                <div class="q-item">
+                    <span class="q-label">Active Bookings</span>
+                    <span class="q-value ok" id="qActive">0 / 3</span>
+                    <span class="q-sub">Max concurrent reservations</span>
+                </div>
+                <div class="q-item">
+                    <span class="q-label">Weekly Hours</span>
+                    <span class="q-value ok" id="qHours">0 / 12</span>
+                    <span class="q-sub">Resets every Sunday</span>
+                </div>
+                <div class="q-item">
+                    <span class="q-label">Role</span>
+                    <span class="q-value" style="color:var(--bk-blue)" id="qRole">STUDENT</span>
+                    <span class="q-sub">Bookings require approval</span>
+                </div>
+            </div>
+
+            <!-- CLASSROOM GRID -->
+            <div class="bk-grid" id="grid"></div>
+
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT SYSTEM -->
+    <script>
+(function () {
+    'use strict';
+
+    const MAX_ACTIVE = 3;
+    const MAX_WEEK_HOURS = 12;
+    const $ = (id) => document.getElementById(id);
+
+    // SENARAI CLASSROOM (Kapasiti dinyatakan 20 orang)
+    const FACILITIES = [
+        { id:'f1', name:'SMART CLASSROOM', type:'classroom', location:'DFK BUILDING, Level 1', capacity: 20, status:'available', equipment:['2 Smart TV','2 Whiteboard','AC','20 PC'] },
+        { id:'f2', name:'DFK2', type:'classroom', location:'DFK BUILDING, Level 1', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f3', name:'DFK3', type:'classroom', location:'DFK BUILDING, Level 1', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f4', name:'DFK4', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f5', name:'DFK5', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f6', name:'DFK6', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f7', name:'DFK7', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f8', name:'DFK8', type:'classroom', location:'DFK BUILDING, Level 3', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f9', name:'DFK9', type:'classroom', location:'DFK BUILDING, Level 3', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+        { id:'f10', name:'DFK10', type:'classroom', location:'DFK BUILDING, Level 3', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] }
+    ];
+
+    const SLOTS = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0,10);
+    const todayStr = iso(today);
+
+    // BACA DATA DARI LOCALSTORAGE
+    function getSavedBookings() {
+        const saved = localStorage.getItem('mySavedBookings');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    const currentUser = localStorage.getItem('currentUser') || 'User';
+    const currentSid  = localStorage.getItem('currentStudentId') || 'S00000';
+
+    function typeLabel(t){ return t.charAt(0).toUpperCase()+t.slice(1); }
+
+    // AMBIL SLOT YANG DAH DITEMPAH (Menyokong Array / Format lama)
+    function bookedSlotsFor(facilityId, date) {
+        const myBookings = getSavedBookings();
+        const booked = [];
+        myBookings.forEach(b => { 
+            if (b.facilityId === facilityId && b.date === date && b.status !== 'CANCELLED') { 
+                if (Array.isArray(b.slots)) {
+                    booked.push(...b.slots);
+                } else if (Array.isArray(b.slot)) {
+                    booked.push(...b.slot);
+                } else if (b.slot) {
+                    booked.push(b.slot); 
+                }
+            } 
+        });
+        return booked;
+    }
+
+    // RENDER SENARAI BILIK
+    function renderGrid() {
+        const grid = $('grid');
+        grid.innerHTML = '';
+
+        FACILITIES.forEach(f => {
+            const card = document.createElement('div');
+            card.className = 'bk-card';
+            const bookable = f.status === 'available';
+
+            card.innerHTML = `
+                <div class="c-top type-${f.type}">
+                    <span>${typeLabel(f.type)}</span>
+                    <span class="bk-status ${f.status}">${f.status.toUpperCase()}</span>
+                </div>
+                <div class="c-body">
+                    <h3>${f.name}</h3>
+                    <div class="bk-meta"><i class="bi bi-geo-alt-fill"></i> ${f.location}</div>
+                    <div class="bk-meta"><i class="bi bi-people-fill"></i> Capacity: ${f.capacity}</div>
+                    <div class="bk-tags">${f.equipment.map(e=>`<span class="bk-tag">${e}</span>`).join('')}</div>
+                </div>
+                <div class="c-foot">
+                    <button class="btn btn-roblox ${bookable?'btn-success text-white':'btn-secondary text-white'}" ${bookable?'':'disabled'}>
+                        <i class="bi bi-calendar-plus"></i> ${bookable?'BOOK NOW':(f.status==='maintenance'?'UNDER MAINTENANCE':'UNAVAILABLE')}
+                    </button>
+                </div>`;
+                
+            if (bookable) {
+                card.querySelector('button').onclick = () => openBookingModal(f);
+            }
+            grid.appendChild(card);
+        });
+    }
+
+    // MODAL TEMPAHAN (DIKEMASKINI UNTUK BANYAK BUTTON)
+    function openBookingModal(f) {
+        const back = document.createElement('div');
+        back.className = 'bk-modal-backdrop';
+        back.innerHTML = `
+          <div class="bk-modal" role="dialog" aria-modal="true">
+            <div class="bk-modal-head">
+              <span><i class="bi bi-calendar-plus"></i> ${f.name}</span>
+              <button class="x" aria-label="Close">&times;</button>
+            </div>
+            <div class="bk-modal-body">
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <label class="bk-mini-label" for="bkDate">Date</label>
+                  <input type="date" id="bkDate" class="form-control bk-input" min="${todayStr}" value="${todayStr}">
+                </div>
+                <div class="col-md-5">
+                  <label class="bk-mini-label">Capacity</label>
+                  <input type="text" class="form-control bk-input" value="${f.capacity} people" readonly>
+                </div>
+                <div class="col-12">
+                  <label class="bk-mini-label">Select Time Slots (Multiple selection allowed)</label>
+                  <div class="bk-slots" id="bkSlots"></div>
+                  <div class="bk-legend">
+                    <span><span class="dot free"></span> Available</span>
+                    <span><span class="dot sel"></span> Selected</span>
+                    <span><span class="dot busy"></span> Already booked</span>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="bk-mini-label" for="bkPurpose">Purpose <span style="color:var(--bk-red)">*</span></label>
+                  <textarea id="bkPurpose" class="form-control bk-input" rows="2" maxlength="200" placeholder="e.g. Group study, project meeting, class replacement..."></textarea>
+                </div>
+              </div>
+              <div class="bk-summary" id="bkSummary" style="display:none"></div>
+            </div>
+            <div class="bk-modal-foot">
+              <button class="btn btn-roblox btn-light" data-close>CANCEL</button>
+              <button class="btn btn-roblox btn-success text-white" id="bkConfirm" disabled><i class="bi bi-check2-circle"></i> CONFIRM BOOKING</button>
+            </div>
+          </div>`;
+
+        // SIMPAN BERBILANG SLOT DALAM ARRAY
+        let selectedSlots = [];
+        const dateEl = back.querySelector('#bkDate');
+        const slotsEl = back.querySelector('#bkSlots');
+        const confirmBtn = back.querySelector('#bkConfirm');
+        const summaryEl = back.querySelector('#bkSummary');
+
+        function updateSummary() {
+            const purpose = back.querySelector('#bkPurpose').value.trim();
+            const canBook = selectedSlots.length > 0 && purpose.length >= 3;
+            confirmBtn.disabled = !canBook;
+
+            if (selectedSlots.length > 0) {
+                summaryEl.style.display = 'block';
+                const totalHours = selectedSlots.length;
+                summaryEl.innerHTML = `<b>SUMMARY</b><br>
+                    ${f.name} &bull; ${dateEl.value}<br>
+                    Slots: <b>${selectedSlots.join(', ')}</b> (${totalHours} hour${totalHours > 1 ? 's' : ''})<br>
+                    Booked by: ${currentUser}`;
+            } else {
+                summaryEl.style.display = 'none';
+            }
+        }
+
+        function renderSlots() {
+            selectedSlots = [];
+            const booked = bookedSlotsFor(f.id, dateEl.value);
+            slotsEl.innerHTML = '';
+
+            SLOTS.forEach(s => {
+                const div = document.createElement('div');
+                const isBooked = booked.includes(s);
+                
+                div.className = 'bk-slot' + (isBooked ? ' booked' : '');
+                div.textContent = s;
+                
+                if (!isBooked) {
+                    div.onclick = () => {
+                        if (selectedSlots.includes(s)) {
+                            // Jika dah pilih, tekan sekali lagi untuk deselect
+                            selectedSlots = selectedSlots.filter(item => item !== s);
+                            div.classList.remove('selected');
+                        } else {
+                            // Jika belum pilih, tambah ke senarai
+                            selectedSlots.push(s);
+                            div.classList.add('selected');
+                        }
+                        // Susun semula masa mengikut urutan jam
+                        selectedSlots.sort();
+                        updateSummary();
+                    };
+                }
+                slotsEl.appendChild(div);
+            });
+            updateSummary();
+        }
+
+        dateEl.onchange = renderSlots;
+        back.querySelector('#bkPurpose').addEventListener('input', updateSummary);
+
+        confirmBtn.onclick = () => {
+            const currentBookings = getSavedBookings();
+            
+            // Semak kuota aktif
+            if (currentBookings.length >= MAX_ACTIVE) {
+                alert('Quota reached: you already have ' + MAX_ACTIVE + ' active bookings.');
+                return;
+            }
+
+            // Semak kuota jumlah jam mingguan
+            let totalHoursUsed = 0;
+            currentBookings.forEach(b => {
+                if (b.status !== 'CANCELLED') {
+                    totalHoursUsed += Array.isArray(b.slots) ? b.slots.length : (Array.isArray(b.slot) ? b.slot.length : 1);
+                }
+            });
+
+            if (totalHoursUsed + selectedSlots.length > MAX_WEEK_HOURS) {
+                alert(`Quota exceeded: Selecting ${selectedSlots.length} hour(s) will exceed your weekly limit of ${MAX_WEEK_HOURS} hours.`);
+                return;
+            }
+
+            const ref = 'BK-' + Math.floor(100000 + Math.random()*900000);
+            const booking = {
+                reference: ref,
+                facilityId: f.id,
+                facility: f.name,
+                date: dateEl.value,
+                slots: selectedSlots, // Simpan array slot (cth: ["09:00", "10:00"])
+                purpose: back.querySelector('#bkPurpose').value.trim(),
+                status: 'PENDING'
+            };
+            
+            currentBookings.push(booking);
+            // SIMPAN DATA KE LOCALSTORAGE
+            localStorage.setItem('mySavedBookings', JSON.stringify(currentBookings));
+
+            back.remove();
+            renderQuota();
+            renderGrid();
+            showSuccess(booking);
+        };
+
+        function close(){ back.remove(); }
+        back.querySelector('.x').onclick = close;
+        back.querySelectorAll('[data-close]').forEach(b => b.onclick = close);
+        back.addEventListener('click', (e)=>{ if(e.target===back) close(); });
+
+        document.body.appendChild(back);
+        renderSlots();
+    }
+
+    function showSuccess(b) {
+        const back = document.createElement('div');
+        back.className = 'bk-modal-backdrop';
+        
+        const displaySlots = Array.isArray(b.slots) ? b.slots.join(', ') : b.slot;
+        const totalHours = Array.isArray(b.slots) ? b.slots.length : 1;
+
+        back.innerHTML = `
+          <div class="bk-modal" style="max-width:440px">
+            <div class="bk-modal-head success"><span><i class="bi bi-check-circle-fill"></i> BOOKING REQUESTED</span></div>
+            <div class="bk-modal-body text-center">
+              <div class="bk-icon-big"><i class="bi bi-check-circle-fill"></i></div>
+              <h5 class="font-bungee mb-1">Reservation Submitted</h5>
+              <div class="bk-ref-badge">${b.reference}</div>
+              <p class="small mb-0">${b.facility}<br>${b.date} &bull; <b>${displaySlots}</b> (${totalHours} hour${totalHours > 1 ? 's' : ''})<br>
+              Status: <b>PENDING APPROVAL</b></p>
+            </div>
+            <div class="bk-modal-foot">
+              <button class="btn btn-roblox btn-success text-white" data-close>OK</button>
+            </div>
+          </div>`;
+        const close=()=>back.remove();
+        back.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);
+        back.addEventListener('click',(e)=>{if(e.target===back) close();});
+        document.body.appendChild(back);
+    }
+
+    function renderQuota() {
+        const myBookings = getSavedBookings();
+        const active = myBookings.length;
+        
+        // Kira jumlah jam dari kesemua tempahan yang dibuat
+        let hours = 0;
+        myBookings.forEach(b => {
+            if (b.status !== 'CANCELLED') {
+                hours += Array.isArray(b.slots) ? b.slots.length : (Array.isArray(b.slot) ? b.slot.length : 1);
+            }
+        });
+
+        const a = $('qActive'), h = $('qHours');
+        if (a) {
+            a.textContent = `${active} / ${MAX_ACTIVE}`;
+            a.className = 'q-value ' + (active >= MAX_ACTIVE ? 'warn' : 'ok');
+        }
+        if (h) {
+            h.textContent = `${hours} / ${MAX_WEEK_HOURS}`;
+            h.className = 'q-value ' + (hours >= MAX_WEEK_HOURS ? 'warn' : 'ok');
+        }
+    }
+
+    // TERSENARAIKAN SINKRONISASI REAL-TIME (LINTAS TAB / PAGE LAIN)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'mySavedBookings') {
+            renderGrid();
+            renderQuota();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if ($('navUser')) $('navUser').textContent = currentUser;
+        renderGrid();
+        renderQuota();
+    });
+})();
+    </script>
+    <!-- ==========================================
+ 3. SKRIP FAQ CHATBOT LOADER (DIKEMASKINI)
+ ========================================== -->
+<script data-faq-loader="true">
+(function () {
+    if (window.__faqChatbotLoaderBound) return;
+    window.__faqChatbotLoaderBound = true;
+
+    // Ditambah laluan '/' (root) dan '../../../../' (4 level ke atas)
+    var candidates = [
+        '/faq-chatbot.js',
+        './faq-chatbot.js', 
+        '../faq-chatbot.js', 
+        '../../faq-chatbot.js', 
+        '../../../faq-chatbot.js',
+        '../../../../faq-chatbot.js'
+    ];
+    var index = 0;
+
+    function tryLoad() {
+        if (index >= candidates.length) return;
+        var script = document.createElement('script');
+        script.src = candidates[index];
+        script.onload = function () {
+            if (window.__rbxFaqLoaded) {
+                console.log('FAQ chatbot loaded from: ' + candidates[index]);
+            }
+        };
+        script.onerror = function () {
+            index += 1;
+            tryLoad();
+        };
+        document.head.appendChild(script);
+    }
+
+    tryLoad();
+})();
+</script>
+</body>
+</html>
