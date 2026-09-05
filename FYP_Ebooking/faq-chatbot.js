@@ -3,7 +3,7 @@
   if (window.__rbxFaqLoaded) return;
   window.__rbxFaqLoaded = true;
 
-  const GEMINI_API_KEY = '';
+  const GEMINI_API_KEY = 'AQ.Ab8RN6LWJR-ZPiMeMvcug4t_fN2OLckjSxpiHO-3U5pTYHAQ2w';
   const GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash',  'gemini-1.5-flash'];
 
   const SB_URL = 'https://doyyrhhscdpchuvpancq.supabase.co';
@@ -23,7 +23,7 @@
     { q: ['login', 'log in', 'sign in', 'masuk akaun'], a: "Use your registered email and password on the LOG IN page. If you don't have an account, click SIGN UP." },
     { q: ['register', 'sign up', 'signup', 'account', 'daftar'], a: "Click SIGN UP on the login page and fill in your name, email and password." },
     { q: ['password', 'forgot', 'reset', 'lupa kata laluan'], a: "Password reset isn't in-app yet — please contact the admin to reset your password." },
-    { q: ['facility', 'facilities', 'sport', 'library', 'dfk', 'available', 'kemudahan'], a: "Available facilities: DFK Building (dfk.01–dfk.09), Library (Literasi 1, Literasi 2, Century 21st), and Sports (Field, Badminton Hall, Volleyball Court, Takraw Court, Pingpong Room)." },
+    { q: ['facility', 'facilities', 'sport', 'library', 'dfk', 'available', 'kemudahan'], a: "Available facilities: DFK Building (DFK1-DFK10), Library (Literasi 1, Literasi 2, Century 21st), and Sports (Field, Badminton Hall, Volleyball Court, Takraw Court, Pingpong Room)." },
     { q: ['time', 'slot', 'hour', 'when', 'open', 'masa'], a: "Time slots are shown on each room's timetable. Green/white = available, red = booked." },
     { q: ['operation', 'operating', 'hours', 'waktu', 'operasi', 'weekend', 'sabtu', 'jumaat', 'buka', 'tutup', 'operating hours 🕒'], a: "🕒 Operating Hours: Sunday–Thursday (8:00 AM – 5:00 PM). Facilities are closed on Weekends & Public Holidays." },
     { q: ['admin', 'contact', 'help', 'support', 'bantuan'], a: "For issues not answered here, please contact your TVET MARA administrator." },
@@ -98,28 +98,33 @@
     ctx += "=== LANGUAGE RULE ===\n";
     ctx += "If you are answering casually or answering FAQs, you MUST reply in a friendly, conversational mix of English and Bahasa Melayu (santai dan profesional untuk pelajar kampus).\n";
     ctx += "HOWEVER, if the user asks to find/book a room, DO NOT include any conversational text. Output ONLY the JSON block.\n";
-    ctx += "IMPORTANT: If the user asks about their personal class schedule (e.g. 'kelas harini ada tak?' or 'jadual saya'), DO NOT output JSON to search rooms. Instead, politely ask them to click the 'My Schedule 📅' button on the menu to check their class timetable.\n\n";
+    ctx += "IMPORTANT: If the user asks about their personal class schedule (e.g. 'jadual saya'), politely ask them to click 'My Schedule 📅' button.\n\n";
+
     ctx += "=== SEARCH RULES ===\n";
-    ctx += "1. REAL-TIME STRICT RULE: If the user asks for available rooms WITHOUT specifying a date and time (e.g. 'cari bilik kosong'), you MUST strictly use the Current Malaysia Date & Time above. DO NOT guess or suggest future dates.\n";
-    ctx += "2. Operating Hours Rule: If the requested start_time is BEFORE 08:00:00 or AFTER 17:00:00, DO NOT search database. Instead, reply directly in text (using Malay/English) telling the user that facilities are closed at that hour.\n";
-    ctx += "3. JSON STRICT OUTPUT: If time is within operating hours and you need to search, output EXACTLY AND ONLY this JSON format (no backticks, no extra words):\n";
-    ctx += '{"action": "SEARCH_ROOM", "booking_date": "YYYY-MM-DD", "start_time": "HH:MM:SS"}\n\n';
+    ctx += "1. REAL-TIME STRICT RULE: If the user asks without specifying date/time, use Current Malaysia Date & Time above.\n";
+    ctx += "2. If start_time is BEFORE 08:00:00 or AFTER 17:00:00, reply directly in text telling user facilities are closed.\n";
+    ctx += "3. JSON OUTPUT: If user mentions a specific room (e.g. 'dfk 1', 'badminton court'), put it in target_room. If general search, set target_room to null.\n";
+    ctx += 'Output format: {"action": "SEARCH_ROOM", "booking_date": "YYYY-MM-DD", "start_time": "HH:MM:SS", "target_room": "room name or null"}\n\n';
 
     ctx += "=== FAQ KNOWLEDGE BASE ===\n";
     FAQS.forEach((f, i) => { ctx += `FAQ ${i + 1} (${f.q.join(', ')}): ${f.a}\n`; });
     return ctx;
   }
 
+  function normalizeRoomName(str) {
+    if (!str) return '';
+    return str.toString().toLowerCase().replace(/[\s\.\-_]/g, '');
+  }
+
   async function handleAIActions(actionObj) {
     const supabase = await getSupabaseClient();
     if (!supabase) return "⚠️ Oops, database connection tak jumpa.";
 
-    const { action, booking_date, start_time } = actionObj;
+    let { action, booking_date, start_time, target_room } = actionObj;
 
-    // TAPISAN KETAT WAKTU OPERASI (08:00:00 HINGGA 17:00:00)
     const searchHour = parseInt(start_time.split(':')[0], 10);
     if (searchHour < 8 || searchHour >= 17) {
-      return `⏰ <strong>Oops, we are closed!</strong><br>Fasiliti di TVET MARA Campus Besut hanya beroperasi dari jam <strong>8:00 AM hingga 5:00 PM</strong> (Ahad–Khamis). Boleh try search slot masa lain ya!`;
+      return `⏰ <strong>Oops, we are closed!</strong><br>Fasiliti di TVET MARA Campus Besut hanya beroperasi dari jam <strong>8:00 AM hingga 5:00 PM</strong> (Ahad–Khamis).`;
     }
 
     if (action === 'SEARCH_ROOM') {
@@ -127,88 +132,77 @@
       const dateObj = new Date(booking_date);
       const dayName = days[dateObj.getDay()];
 
-      // Lakukan 2 carian serentak
       const [bookingsRes, classesRes] = await Promise.all([
         supabase
           .from('bookings')
-          .select('room_name')
-          .eq('booking_date', booking_date)
-          .lte('start_time', start_time)
-          .gt('end_time', start_time),
+          .select('*')
+          .eq('booking_date', booking_date),
         supabase
           .from('class_schedules')
-          .select('room, time')
+          .select('*')
           .ilike('day', dayName) 
       ]);
 
-      if (bookingsRes.error) return `⚠️ Alamak, database error (Booking): ${bookingsRes.error.message}`;
-      if (classesRes.error) return `⚠️ Alamak, database error (Jadual): ${classesRes.error.message}`;
+      // Tapis tempahan aktif pada jam tersebut
+      const bookedRooms = (bookingsRes.data || [])
+        .filter(b => {
+          if (b.status && b.status.toLowerCase() === 'cancelled') return false;
+          const bStart = b.start_time || b.time || b.time_slot || '';
+          const bEnd = b.end_time || '';
+          const startMatch = bStart.match(/\d+/);
+          if (!startMatch) return false;
+          let bStartHour = parseInt(startMatch[0], 10);
+          if (bStart.toLowerCase().includes('pm') && bStartHour !== 12) bStartHour += 12;
 
-      // 1. Dapatkan bilik yang telah dibooking
-      const bookedRooms = (bookingsRes.data || []).map(b => b.room_name ? b.room_name.toLowerCase() : '');
+          let bEndHour = bStartHour + 1;
+          if (bEnd) {
+            const endMatch = bEnd.match(/\d+/);
+            if (endMatch) {
+              bEndHour = parseInt(endMatch[0], 10);
+              if (bEnd.toLowerCase().includes('pm') && bEndHour !== 12) bEndHour += 12;
+            }
+          }
+          return searchHour >= bStartHour && searchHour < bEndHour;
+        })
+        .map(b => normalizeRoomName(b.room_name || b.room || b.facility_name || ''));
       
-      // 2. Dapatkan bilik kelas yang guna pada JAM yang sama
+      // Tapis kelas yang guna bilik pada jam tersebut
       const classRooms = (classesRes.data || [])
         .filter(c => {
-          if (!c.time) return false;
-          const classHourMatch = c.time.match(/\d+/);
-          if (!classHourMatch) return false;
-          let classHour = parseInt(classHourMatch[0], 10);
-          
-          if (c.time.toLowerCase().includes('pm') && classHour !== 12) {
-            classHour += 12;
-          }
-          return classHour === searchHour;
+          const cTime = c.time || c.time_slot || '';
+          if (!cTime) return false;
+          const match = cTime.match(/\d+/);
+          if (!match) return false;
+          let cH = parseInt(match[0], 10);
+          if (cTime.toLowerCase().includes('pm') && cH !== 12) cH += 12;
+          return cH === searchHour;
         })
-        .map(c => c.room ? c.room.toLowerCase() : '');
+        .map(c => normalizeRoomName(c.room || c.room_name || ''));
       
       const allUsedRooms = [...bookedRooms, ...classRooms];
-      const freeRooms = ALL_ROOMS.filter(r => !allUsedRooms.includes(r.toLowerCase()));
+      const freeRooms = ALL_ROOMS.filter(r => !allUsedRooms.includes(normalizeRoomName(r)));
 
-      // ========================================================
-      // 🔥 PENAMBAHBAIKAN DEGREE LEVEL: SMART SLOT SUGGESTION
-      // ========================================================
-      if (freeRooms.length === 0) {
-        const nextHour = searchHour + 1;
-        
-        // Cek kalau jam seterusnya masih dalam waktu operasi
-        if (nextHour < 17) {
-          // Format masa untuk jam seterusnya (contoh 10:15:00 jadi 11:15:00)
-          const nextTimeStr = (nextHour < 10 ? '0' + nextHour : nextHour) + start_time.substring(start_time.indexOf(':'));
-          
-          // Semak database sekejap untuk jam seterusnya
-          const { data: nextBookings } = await supabase
-            .from('bookings')
-            .select('room_name')
-            .eq('booking_date', booking_date)
-            .lte('start_time', nextTimeStr)
-            .gt('end_time', nextTimeStr);
+      // 🎯 JIKA USER TANYA PASAL BILIK SPESIFIK (CONTOH: DFK 1)
+      if (target_room && target_room !== 'null' && target_room.trim() !== '') {
+        const normTarget = normalizeRoomName(target_room);
+        const isTargetFree = freeRooms.some(r => normalizeRoomName(r) === normTarget);
 
-          const nextBookedRooms = (nextBookings || []).map(b => b.room_name ? b.room_name.toLowerCase() : '');
-          
-          const nextClassRooms = (classesRes.data || [])
-            .filter(c => {
-              if (!c.time) return false;
-              const match = c.time.match(/\d+/);
-              if (!match) return false;
-              let cH = parseInt(match[0], 10);
-              if (c.time.toLowerCase().includes('pm') && cH !== 12) cH += 12;
-              return cH === nextHour;
-            }).map(c => c.room ? c.room.toLowerCase() : '');
-
-          const nextUsedRooms = [...nextBookedRooms, ...nextClassRooms];
-          const nextFreeRooms = ALL_ROOMS.filter(r => !nextUsedRooms.includes(r.toLowerCase()));
-
-          // Kalau jam seterusnya ada bilik kosong, keluarkan cadangan!
-          if (nextFreeRooms.length > 0) {
-            return `❌ Sorry ya, semua bilik dah full pada jam ${start_time}.<br><br>💡 <strong>TAPI CHOP!</strong> Untuk 1 jam selepas tu (<strong>${nextTimeStr}</strong>), bilik ni *available*:<br>• ${nextFreeRooms.map(r => r.toUpperCase()).join('<br>• ')}<br><br><em>Nak try slot masa ni tak? Boleh terus gi <strong>HOME → BOOKING SYSTEM</strong>.</em>`;
-          }
+        if (isTargetFree) {
+          return `🟢 <strong>${target_room.toUpperCase()} KOSONG & AVAILABLE!</strong><br>` +
+                 `Bilik ini boleh ditempah pada <strong>${booking_date} @ ${start_time}</strong>.<br><br>` +
+                 `📌 <em>Cepat-cepat buat tempahan di: <strong>HOME → BOOKING SYSTEM</strong></em>`;
+        } else {
+          return `❌ Sorry ya, <strong>${target_room.toUpperCase()} dah DITEMPAH / ADA KELAS</strong> pada ${booking_date} (${start_time}).<br><br>` +
+                 (freeRooms.length > 0 
+                   ? `💡 <strong>Bilik lain yang masih kosong pada jam ni:</strong><br>• ${freeRooms.map(r => r.toUpperCase()).join('<br>• ')}<br><br>📌 <em>Boleh pilih bilik lain di <strong>HOME → BOOKING SYSTEM</strong></em>`
+                   : `Dan semua bilik lain pun dah penuh.`);
         }
-        
-        // Kalau jam tu penuh, dan jam seterusnya pun penuh (atau luar waktu operasi)
+      }
+
+      // JIKA USER TANYA CARIAN UMUM (SEMUA BILIK)
+      if (freeRooms.length === 0) {
         return `❌ Sorry ya, **semua bilik dah full atau ada kelas** pada ${booking_date} (${start_time}). Cuba try check slot masa yang lain okay?`;
       }
-      // ========================================================
 
       return `🟢 <strong>Awesome! Ni bilik yang available on ${booking_date} @ ${start_time}:</strong><br>` +
              `• ${freeRooms.map(r => r.toUpperCase()).join('<br>• ')}<br><br>` +
@@ -216,7 +210,7 @@
     }
 
     return "⚠️ Invalid action. Sila cuba lagi.";
-  }
+  } 
 
   let lastCallTime = 0;
   const MIN_CALL_INTERVAL = 0;
