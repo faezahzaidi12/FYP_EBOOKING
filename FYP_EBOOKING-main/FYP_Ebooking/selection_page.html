@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROOM SELECTION | MyTVETMARA e-BOOKING</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./auth-guard.js"></script>
+
+    <style>
+        /* =====================================================
+           GLOBAL & VIDEO BACKGROUND
+        ===================================================== */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #071c2b;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-bungee {
+            font-family: 'Bungee', sans-serif;
+        }
+
+        #myVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -3;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        #myVideo.loaded {
+            opacity: 1;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(3, 20, 32, 0.82), rgba(4, 47, 69, 0.60));
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* =====================================================
+           NAVBAR
+        ===================================================== */
+        .navbar {
+            background: rgba(35, 38, 42, 0.95) !important;
+            border-bottom: 3px solid #08a9ff;
+        }
+
+        .nav-btn {
+            font-family: 'Bungee', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* =====================================================
+           ROBLOX CONTAINER
+        ===================================================== */
+        .roblox-card2 {
+            background: rgba(255, 255, 255, 0.96);
+            border: 3px solid #292d32;
+            box-shadow: 8px 8px 0 rgba(20, 25, 30, 0.8);
+            border-radius: 8px;
+            padding: 35px 25px;
+            margin: 40px auto 60px;
+            max-width: 1150px;
+        }
+
+        /* =====================================================
+           UI KAD (DESTINATION CARDS)
+        ===================================================== */
+        .destination-card {
+            position: relative;
+            background: #ffffff;
+            border: 3px solid #292d32;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 6px 6px 0 #292d32;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            text-align: left;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .destination-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 9px 12px 0 #292d32;
+        }
+
+        /* Accent Top Bar */
+        .accent-bar {
+            height: 6px;
+            width: 100%;
+        }
+        .dfk-card .accent-bar { background: #079de9; }
+        .sport-card .accent-bar { background: #e85d5d; }
+        .library-card .accent-bar { background: #a54bc5; }
+
+        /* Card Image & Icon */
+        .card-image {
+            height: 170px;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+
+        .card-image::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.05));
+        }
+
+        .dfk-card .card-image {
+            background-image: url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80");
+        }
+        .sport-card .card-image {
+            background-image: url("https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80");
+        }
+        .library-card .card-image {
+            background-image: url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80");
+        }
+
+        .card-icon {
+            position: absolute;
+            z-index: 2;
+            left: 15px;
+            bottom: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            border-radius: 8px;
+            color: white;
+            font-size: 22px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Card Content */
+        .card-content {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .card-category {
+            font-family: 'Bungee', sans-serif;
+            font-size: 10px;
+            color: #008ed6;
+            margin-bottom: 4px;
+        }
+
+        .card-content h3 {
+            font-family: 'Bungee', sans-serif;
+            font-size: 18px;
+            color: #25292d;
+            margin-bottom: 8px;
+        }
+
+        .card-content p {
+            font-size: 12px;
+            color: #686d72;
+            line-height: 1.5;
+            flex-grow: 1;
+            margin-bottom: 15px;
+        }
+
+        /* Card Footer */
+        .card-footer-custom {
+            border-top: 2px dashed #e0e0e0;
+            padding-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-footer-custom span {
+            font-family: 'Bungee', sans-serif;
+            font-size: 10px;
+            color: #555;
+        }
+
+        .arrow-button {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background: #168d5a;
+            transition: all 0.2s ease;
+        }
+
+        .destination-card:hover .arrow-button {
+            transform: translateX(4px);
+            background: #0878bc;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- VIDEO BACKGROUND -->
+    <video autoplay muted loop playsinline id="myVideo">
+        <source src="mainBG.mp4" type="video/mp4">
+    </video>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark p-3 shadow">
+        <div class="container text-uppercase d-flex align-items-center">
+            <a class="navbar-brand font-bungee" href="#">
+                <i class="bi bi-grid-3x3-gap-fill"></i> ROOM SELECTION
+            </a>
+            <div class="d-flex gap-2 ms-auto">
+                <button class="btn btn-primary nav-btn border-2 border-white" onclick="window.location.href='home.html'">
+                    <i class="bi bi-arrow-left"></i> BACK
+                </button>
+                <button class="btn btn-danger nav-btn border-2 border-white" onclick="authGuard.logout()">
+                    LOG OUT
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container text-center pb-5">
+        <div class="roblox-card2">
+            <h2 class="font-bungee text-dark mb-4">CHOOSE YOUR DESTINATION</h2>
+
+            <div class="row g-4 justify-content-center">
+                
+                <!-- 1. DFK'S BUILDING -->
+                <div class="col-md-4">
+                    <div class="destination-card dfk-card" onclick="window.location.href='Dfk/BookingDfk.html'">
+                        <div class="accent-bar"></div>
+                        <div class="card-image">
+                            <div class="card-icon"><i class="bi bi-building"></i></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-category">CLASSROOM FACILITY</div>
+                            <h3>DFK'S BUILDING</h3>
+                            <p>Book classrooms and learning spaces available throughout the DFK Building.</p>
+                            <div class="card-footer-custom">
+                                <span>CLASSROOMS</span>
+                                <div class="arrow-button"><i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. SPORT FACILITY -->
+                <div class="col-md-4">
+                    <div class="destination-card sport-card" onclick="window.location.href='SportFacility/BookingSF.html'">
+                        <div class="accent-bar"></div>
+                        <div class="card-image">
+                            <div class="card-icon"><i class="bi bi-trophy-fill"></i></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-category">SPORTS FACILITY</div>
+                            <h3>SPORT FACILITY</h3>
+                            <p>Reserve sports and recreational facilities for your activities.</p>
+                            <div class="card-footer-custom">
+                                <span>SPORTS</span>
+                                <div class="arrow-button"><i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. LIBRARY -->
+                <div class="col-md-4">
+                    <div class="destination-card library-card" onclick="window.location.href='Library/BookingLibrary.html'">
+                        <div class="accent-bar"></div>
+                        <div class="card-image">
+                            <div class="card-icon"><i class="bi bi-book-fill"></i></div>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-category">LEARNING FACILITY</div>
+                            <h3>LIBRARY</h3>
+                            <p>Reserve library spaces and learning areas for study and academic activities.</p>
+                            <div class="card-footer-custom">
+                                <span>LIBRARY</span>
+                                <div class="arrow-button"><i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div> 
+        </div>
+    </div>
+
+    <!-- SKRIP VIDEO SMOOTH TRANSITION -->
+    <script>
+        const bgVideo = document.getElementById('myVideo');
+        if (bgVideo) {
+            const savedTime = localStorage.getItem('bgVideoTime');
+            if (savedTime) bgVideo.currentTime = parseFloat(savedTime);
+
+            bgVideo.addEventListener('loadeddata', () => bgVideo.classList.add('loaded'));
+            if (bgVideo.readyState >= 3) bgVideo.classList.add('loaded');
+
+            setInterval(() => localStorage.setItem('bgVideoTime', bgVideo.currentTime), 500);
+            window.addEventListener('beforeunload', () => localStorage.setItem('bgVideoTime', bgVideo.currentTime));
+        }
+    </script>
+
+    <!-- SKRIP FAQ CHATBOT LOADER -->
+    <script data-faq-loader="true">
+        (function () {
+            if (window.__faqChatbotLoaderBound) return;
+            window.__faqChatbotLoaderBound = true;
+
+            var candidates = ['./faq-chatbot.js', '../faq-chatbot.js', '../../faq-chatbot.js', '../../../faq-chatbot.js'];
+            var index = 0;
+
+            function tryLoad() {
+                if (index >= candidates.length) return;
+                var script = document.createElement('script');
+                script.src = candidates[index];
+                script.onload = function () {
+                    if (window.__rbxFaqLoaded) console.log('FAQ chatbot loaded');
+                };
+                script.onerror = function () {
+                    index++;
+                    tryLoad();
+                };
+                document.head.appendChild(script);
+            }
+            tryLoad();
+        })();
+        
+    </script>
+</body>
+</html>

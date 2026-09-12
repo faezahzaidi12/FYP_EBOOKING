@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOG IN</title>
+    <!-- Bootstrap and Font Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Link ke style_index.css yang berada di dalam folder yang sama (USER_PAGE) -->
+    <link rel="stylesheet" href="style_index.css">
+
+    <!-- REQUIRED: Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <link rel="stylesheet" href="footer.css">
+</head>
+<body>
+    <!-- Video Background -->
+    <video autoplay muted loop id="myVideo">
+        <source src="mainBG.mp4" type="video/mp4">
+    </video>
+
+    <!-- Overlay -->
+    <div class="video-overlay"></div>
+    <div class="roblox-card text-center text-uppercase">
+        <div class="logo-frame">
+            <img src="logo_tvetmara.png" style="width: 100%;">
+        </div>
+        <div class="inner-container">
+            <h2 class="font-bungee mb-1">LOG IN</h2>
+            <p class="small text-muted mb-4 fw-bold">MYTVETMARA e-BOOKING</p>
+            <div class="text-start mb-3">
+                <label class="fw-bold small">EMAIL :</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="EMAIL">
+            </div>
+            <div class="text-start mb-4">
+                <label class="fw-bold small">PASSWORD:</label>
+                <input type="password" id="loginPass" class="form-control" placeholder="PASSWORD">
+            </div>
+
+            <!-- Butang LET'S GO memanggil fungsi doLogin() -->
+            <button class="btn btn-roblox btn-success w-100 py-3 fs-3 text-white mb-3" onclick="doLogin()">LET'S GO!</button>
+            <button class="btn btn-roblox btn-primary w-100 py-2" onclick="window.location.href='Register.html'">SIGN UP</button>
+        </div>
+    </div>
+
+   <script>
+    // ==========================================
+    // 1. SKRIP VIDEO BACKGROUND SMOOTH TRANSITION
+    // ==========================================
+    const bgVideo = document.getElementById('myVideo');
+
+    if (bgVideo) {
+        const savedTime = localStorage.getItem('bgVideoTime');
+        if (savedTime) {
+            bgVideo.currentTime = parseFloat(savedTime);
+        }
+
+        bgVideo.addEventListener('loadeddata', function() {
+            bgVideo.classList.add('loaded');
+        });
+
+        if (bgVideo.readyState >= 3) {
+            bgVideo.classList.add('loaded');
+        }
+
+        setInterval(() => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        }, 500);
+
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+        });
+    }
+
+    // ==========================================
+    // 2. SKRIP SUPABASE & LOG MASUK / LOGIN
+    // ==========================================
+    const _supabase = window.supabaseClient || null;
+
+    // FUNGSI LOG MASUK UTAMA
+    // Semua akaun termasuk ADMIN mesti authenticate melalui Supabase Auth.
+    async function doLogin() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPass').value;
+
+        if (!email || !password) {
+            alert("PLEASE FILL ALL FIELDS!");
+            return;
+        }
+
+        if (!_supabase) {
+            alert("Sistem tidak tersedia buat masa ini. Sila cuba lagi sebentar.");
+            console.error("Supabase client tidak berjaya dimulakan. Semak supabase-config.js.");
+            return;
+        }
+
+        const { data, error } = await _supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
+            alert("Login Gagal: " + error.message);
+            console.error(error);
+            return;
+        }
+
+        const user = data.user;
+        const metadata = user.user_metadata || {};
+        const normalizedEmail = (user.email || '').toLowerCase();
+
+        // Admin mesti wujud dalam Supabase Auth.
+        // RLS database juga semak email yang sama, jadi bypass LocalStorage tak lagi cukup.
+        const ADMIN_EMAIL = "admin@gmail.com";
+
+        const userData = {
+            id: user.id,
+            fullname: metadata.fullname || metadata.full_name || metadata.display_name || "NAMA PELAJAR",
+            username: metadata.username || metadata.display_name || (user.email ? user.email.split('@')[0].toUpperCase() : "USER"),
+            ic: metadata.ic || metadata.ic_number || "",
+            email: user.email || "",
+            phone: metadata.phone || metadata.phone_number || "",
+            role: normalizedEmail === ADMIN_EMAIL ? "admin" : "student"
+        };
+
+        // LocalStorage hanya untuk paparan/compatibility lama.
+        // Security sebenar datang daripada Supabase Auth session + RLS.
+        localStorage.setItem('userAccount', JSON.stringify(userData));
+        localStorage.setItem('currentUser', userData.username);
+        localStorage.setItem('currentUserId', user.id);
+
+        if (normalizedEmail === ADMIN_EMAIL) {
+            window.location.href = 'ADMIN_PAGE/home_admin.html';
+        } else {
+            window.location.href = 'home.html';
+        }
+    }
+</script>
+
+<!-- ==========================================
+     3. SKRIP FAQ CHATBOT LOADER
+     ========================================== -->
+<script data-faq-loader="true">
+(function () {
+    if (window.__faqChatbotLoaderBound) return;
+    window.__faqChatbotLoaderBound = true;
+
+    var candidates = ['./faq-chatbot.js', '../faq-chatbot.js', '../../faq-chatbot.js', '../../../faq-chatbot.js'];
+    var index = 0;
+
+    function tryLoad() {
+        if (index >= candidates.length) return;
+        var script = document.createElement('script');
+        script.src = candidates[index];
+        script.onload = function () {
+            if (window.__rbxFaqLoaded) {
+                console.log('FAQ chatbot loaded');
+            }
+        };
+        script.onerror = function () {
+            index += 1;
+            tryLoad();
+        };
+        document.head.appendChild(script);
+    }
+
+    tryLoad();
+})();
+</script>
+</body>
+</html>

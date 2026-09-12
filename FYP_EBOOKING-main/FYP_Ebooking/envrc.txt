@@ -1,0 +1,2 @@
+export LOVABLE_IMPORTED_CODEBASE=true
+use devenv

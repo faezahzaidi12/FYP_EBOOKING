@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CLASSROOM BOOKING</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Fail CSS -->
+    <link rel="stylesheet" href="Dfk.css">
+
+    <!-- DITAMBAH: Supabase SDK & config (satu tahap naik ke root FYP_Ebooking) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-config.js"></script>
+</head>
+<body>
+    <video autoplay muted loop id="myVideo">
+        <source src="../mainBG.mp4" type="video/mp4">
+    </video>
+    <nav class="navbar navbar-dark p-3 shadow">
+        <div class="container text-uppercase">
+            <a class="navbar-brand font-bungee text-white" href="#"><i class="bi bi-calendar-check"></i> CLASSROOM BOOKING</a>
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-primary btn-sm font-bungee border-2 border-white" onclick="window.location.href='../selection_page.html'">BACK TO LOBBY</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="bk-wrap">
+
+            <div class="bk-header rbx-in">
+                <h1 class="font-bungee mb-1">BOOK A CLASSROOM</h1>
+                <p class="mb-0 small">Select a classroom below to reserve your slot.</p>
+            </div>
+
+            <!-- QUOTA STRIP -->
+            <div class="bk-quota">
+                <div class="q-item">
+                    <span class="q-label">Active Bookings</span>
+                    <span class="q-value ok" id="qActive">0 / 3</span>
+                    <span class="q-sub">Max concurrent reservations</span>
+                </div>
+                <div class="q-item">
+                    <span class="q-label">Weekly Hours</span>
+                    <span class="q-value ok" id="qHours">0 / 12</span>
+                    <span class="q-sub">Resets every Sunday</span>
+                </div>
+                <div class="q-item">
+                    <span class="q-label">Role</span>
+                    <span class="q-value" style="color:var(--bk-blue)" id="qRole">STUDENT</span>
+                    <span class="q-sub">Bookings require approval</span>
+                </div>
+            </div>
+
+            <!-- CLASSROOM GRID -->
+            <div class="bk-grid" id="grid"></div>
+
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT SYSTEM -->
+    <script>
+(function () {
+    'use strict';
+
+    const MAX_ACTIVE = 3;
+    const MAX_WEEK_HOURS = 12;
+    const $ = (id) => document.getElementById(id);
+
+    // LIST OF CLASSROOMS (capacity stated as 20 people)
+    // Dfk.html
+const FACILITIES = [
+    { id:'f1', name:'SMART CLASSROOM', dbRoomName:'DFK 1', type:'classroom', location:'DFK BUILDING, Level 1', capacity: 20, status:'available', equipment:['2 Smart TV','2 Whiteboard','AC','20 PC'] },
+    { id:'f2', name:'DFK2', dbRoomName:'DFK 2', type:'classroom', location:'DFK BUILDING, Level 1', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f3', name:'DFK3', dbRoomName:'DFK 3', type:'classroom', location:'DFK BUILDING, Level 1', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f4', name:'DFK4', dbRoomName:'DFK 4', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f5', name:'DFK5', dbRoomName:'DFK 5', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f6', name:'DFK6', dbRoomName:'DFK 6', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f7', name:'DFK7', dbRoomName:'DFK 7', type:'classroom', location:'DFK BUILDING, Level 2', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f8', name:'DFK8', dbRoomName:'DFK 8', type:'classroom', location:'DFK BUILDING, Level 3', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f9', name:'DFK9', dbRoomName:'DFK 9', type:'classroom', location:'DFK BUILDING, Level 3', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] },
+    { id:'f10', name:'DFK10', dbRoomName:'DFK 10', type:'classroom', location:'DFK BUILDING, Level 3', capacity: 20, status:'available', equipment:['Smart TV','Whiteboard','AC','20 PC'] }
+];
+
+    const SLOTS = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0,10);
+    const todayStr = iso(today);
+
+    // READ DATA FROM LOCALSTORAGE
+    // NOTE: Still using localStorage for now. Needs to be migrated to
+    // a Supabase table 'bookings' so it matches home.html & check_in.html.
+    function getSavedBookings() {
+        const saved = localStorage.getItem('mySavedBookings');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    const currentUser = localStorage.getItem('currentUser') || 'User';
+    const currentSid  = localStorage.getItem('currentStudentId') || 'S00000';
+
+    function typeLabel(t){ return t.charAt(0).toUpperCase()+t.slice(1); }
+
+    // ---------------------------------------------------------
+    // OPERATING DAYS: Sunday(0) - Thursday(4) only.
+    // Friday(5) & Saturday(6) = CLOSED (per official MyTVETMARA e-Booking rules).
+    // ---------------------------------------------------------
+    const CLOSED_DAYS = [5, 6]; // 5 = Friday, 6 = Saturday
+
+    function isOperatingDay(dateStr) {
+        const day = new Date(dateStr + 'T00:00:00').getDay();
+        return !CLOSED_DAYS.includes(day);
+    }
+
+    // ---------------------------------------------------------
+    // UTIL: calculate start & end of the current week (Sunday-Saturday)
+    // ---------------------------------------------------------
+    function getWeekRange(refDate = new Date()) {
+        const d = new Date(refDate);
+        const day = d.getDay(); // 0 = Sunday
+        const start = new Date(d);
+        start.setDate(d.getDate() - day);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+
+        const toISO = (x) => x.toISOString().slice(0, 10);
+        return { start: toISO(start), end: toISO(end) };
+    }
+
+    // FETCH BOOKED SLOTS — directly from Supabase (no longer localStorage)
+    // NOTE: uses dbRoomName because the 'bookings' table stores room_name, not facilityId
+    async function bookedSlotsFor(dbRoomName, date) {
+        const { data, error } = await supabaseClient
+            .from('bookings')
+            .select('start_time')
+            .eq('room_name', dbRoomName)
+            .eq('booking_date', date)
+            .neq('status', 'CANCELLED');
+
+        if (error) {
+            console.error('Failed to fetch booked slots:', error);
+            return [];
+        }
+
+        // DB start_time format: "08:00:00" -> convert to "08:00" so it matches the SLOTS array
+        return data.map(row => row.start_time.slice(0, 5));
+    }
+
+    // RENDER ROOM LIST
+    function renderGrid() {
+        const grid = $('grid');
+        grid.innerHTML = '';
+
+        FACILITIES.forEach(f => {
+            const card = document.createElement('div');
+            card.className = 'bk-card';
+            const bookable = f.status === 'available';
+
+            card.innerHTML = `
+                <div class="c-top type-${f.type}">
+                    <span>${typeLabel(f.type)}</span>
+                    <span class="bk-status ${f.status}">${f.status.toUpperCase()}</span>
+                </div>
+                <div class="c-body">
+                    <h3>${f.name}</h3>
+                    <div class="bk-meta"><i class="bi bi-geo-alt-fill"></i> ${f.location}</div>
+                    <div class="bk-meta"><i class="bi bi-people-fill"></i> Capacity: ${f.capacity}</div>
+                    <div class="bk-tags">${f.equipment.map(e=>`<span class="bk-tag">${e}</span>`).join('')}</div>
+                </div>
+                <div class="c-foot">
+                    <button class="btn btn-roblox ${bookable?'btn-success text-white':'btn-secondary text-white'}" ${bookable?'':'disabled'}>
+                        <i class="bi bi-calendar-plus"></i> ${bookable?'BOOK NOW':(f.status==='maintenance'?'UNDER MAINTENANCE':'UNAVAILABLE')}
+                    </button>
+                </div>`;
+                
+            if (bookable) {
+                card.querySelector('button').onclick = () => openBookingModal(f);
+            }
+            grid.appendChild(card);
+        });
+    }
+
+    // BOOKING MODAL (UPDATED FOR MULTIPLE BUTTONS)
+    function openBookingModal(f) {
+        const back = document.createElement('div');
+        back.className = 'bk-modal-backdrop';
+        back.innerHTML = `
+          <div class="bk-modal" role="dialog" aria-modal="true">
+            <div class="bk-modal-head">
+              <span><i class="bi bi-calendar-plus"></i> ${f.name}</span>
+              <button class="x" aria-label="Close">&times;</button>
+            </div>
+            <div class="bk-modal-body">
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <label class="bk-mini-label" for="bkDate">Date</label>
+                  <input type="date" id="bkDate" class="form-control bk-input" min="${todayStr}" value="${todayStr}">
+                  <div id="bkDayWarning" class="small mt-1" style="color:var(--bk-red);display:none;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Rooms are closed on Fridays & Saturdays. Please choose another date (Sunday-Thursday).
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <label class="bk-mini-label">Capacity</label>
+                  <input type="text" class="form-control bk-input" value="${f.capacity} people" readonly>
+                </div>
+                <div class="col-12">
+                  <label class="bk-mini-label">Select Time Slots (Multiple selection allowed)</label>
+                  <div class="bk-slots" id="bkSlots"></div>
+                  <div class="bk-legend">
+                    <span><span class="dot free"></span> Available</span>
+                    <span><span class="dot sel"></span> Selected</span>
+                    <span><span class="dot busy"></span> Already booked</span>
+                  </div>
+                </div>
+                <div class="col-12">
+  <label class="bk-mini-label" for="bkLecturer">Lecturer Name</label>
+  <input type="text" id="bkLecturer" class="form-control bk-input" placeholder="e.g. Dr. Ahmad, En. Zulkifli...">
+</div>
+<div class="col-12">
+  <label class="bk-mini-label" for="bkPurpose">Purpose <span style="color:var(--bk-red)">*</span></label>
+  <textarea id="bkPurpose" class="form-control bk-input" rows="2" maxlength="200" placeholder="e.g. Group study, project meeting, class replacement..."></textarea>
+</div>
+              </div>
+              <div class="bk-summary" id="bkSummary" style="display:none"></div>
+            </div>
+            <div class="bk-modal-foot">
+              <button class="btn btn-roblox btn-light" data-close>CANCEL</button>
+              <button class="btn btn-roblox btn-success text-white" id="bkConfirm" disabled><i class="bi bi-check2-circle"></i> CONFIRM BOOKING</button>
+            </div>
+          </div>`;
+
+        // STORE MULTIPLE SLOTS IN AN ARRAY
+        let selectedSlots = [];
+        const dateEl = back.querySelector('#bkDate');
+        const slotsEl = back.querySelector('#bkSlots');
+        const confirmBtn = back.querySelector('#bkConfirm');
+        const summaryEl = back.querySelector('#bkSummary');
+        const dayWarningEl = back.querySelector('#bkDayWarning');
+
+        function updateSummary() {
+            const purpose = back.querySelector('#bkPurpose').value.trim();
+            const canBook = selectedSlots.length > 0 && purpose.length >= 3;
+            confirmBtn.disabled = !canBook;
+
+            if (selectedSlots.length > 0) {
+                summaryEl.style.display = 'block';
+                const totalHours = selectedSlots.length;
+                summaryEl.innerHTML = `<b>SUMMARY</b><br>
+                    ${f.name} &bull; ${dateEl.value}<br>
+                    Slots: <b>${selectedSlots.join(', ')}</b> (${totalHours} hour${totalHours > 1 ? 's' : ''})<br>
+                    Booked by: ${currentUser}`;
+            } else {
+                summaryEl.style.display = 'none';
+            }
+        }
+
+        // UPDATED: renderSlots is now ASYNC because bookedSlotsFor reads from Supabase
+        // ADDED: check operating day (Sunday-Thursday) first before loading slots
+        async function renderSlots() {
+            selectedSlots = [];
+
+            if (!isOperatingDay(dateEl.value)) {
+                dayWarningEl.style.display = 'block';
+                slotsEl.innerHTML = '<div class="small text-muted">No slots available — the room is closed on this day.</div>';
+                updateSummary();
+                return;
+            }
+            dayWarningEl.style.display = 'none';
+
+            slotsEl.innerHTML = '<div class="small text-muted">Loading availability...</div>';
+            const booked = await bookedSlotsFor(f.dbRoomName, dateEl.value);
+            slotsEl.innerHTML = '';
+
+            SLOTS.forEach(s => {
+                const div = document.createElement('div');
+                const isBooked = booked.includes(s);
+                
+                div.className = 'bk-slot' + (isBooked ? ' booked' : '');
+                div.textContent = s;
+                
+                if (!isBooked) {
+                    div.onclick = () => {
+                        if (selectedSlots.includes(s)) {
+                            // If already selected, click again to deselect
+                            selectedSlots = selectedSlots.filter(item => item !== s);
+                            div.classList.remove('selected');
+                        } else {
+                            // If not selected yet, add it to the list
+                            selectedSlots.push(s);
+                            div.classList.add('selected');
+                        }
+                        // Re-sort the times in chronological order
+                        selectedSlots.sort();
+                        updateSummary();
+                    };
+                }
+                slotsEl.appendChild(div);
+            });
+            updateSummary();
+        }
+
+        dateEl.onchange = renderSlots;
+        back.querySelector('#bkPurpose').addEventListener('input', updateSummary);
+
+        confirmBtn.onclick = async () => {
+    // SAFETY-NET: check operating day again before submit
+    // (prevents bypass if UI is modified/devtools/date edited directly)
+    if (!isOperatingDay(dateEl.value)) {
+        alert('Rooms are closed on Fridays & Saturdays. Please choose a date between Sunday and Thursday.');
+        return;
+    }
+
+    // UPDATED: check quota directly from Supabase (no longer localStorage)
+    const { start, end } = getWeekRange();
+
+    const { data: activeRows, error: activeErr } = await supabaseClient
+        .from('bookings')
+        .select('id')
+        .eq('booked_by', currentUser)
+        .neq('status', 'CANCELLED');
+
+    const { data: weekRows, error: weekErr } = await supabaseClient
+        .from('bookings')
+        .select('start_time')
+        .eq('booked_by', currentUser)
+        .neq('status', 'CANCELLED')
+        .gte('booking_date', start)
+        .lte('booking_date', end);
+
+    if (activeErr || weekErr) {
+        console.error('Failed to check quota:', activeErr || weekErr);
+        alert('Unable to check quota, please try again.');
+        return;
+    }
+
+    if (activeRows.length >= MAX_ACTIVE) {
+        alert('Quota reached: you already have ' + MAX_ACTIVE + ' active bookings.');
+        return;
+    }
+
+    if (weekRows.length + selectedSlots.length > MAX_WEEK_HOURS) {
+        alert(`Quota exceeded: Selecting ${selectedSlots.length} hour(s) will exceed your weekly limit of ${MAX_WEEK_HOURS} hours.`);
+        return;
+    }
+
+    // Day name from the selected date (e.g. "Wednesday")
+    const dayName = new Date(dateEl.value + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+    const purposeText = back.querySelector('#bkPurpose').value.trim();
+    const lecturerText = back.querySelector('#bkLecturer').value.trim();
+
+    // ONE ROW PER SLOT (1 hour per row)
+    const rows = selectedSlots.map(slot => {
+        const startHour = parseInt(slot.split(':')[0], 10);
+        const endHour = startHour + 1;
+        return {
+            room_name: f.dbRoomName,
+            booked_by: currentUser,
+            booking_date: dateEl.value,
+            booking_day: dayName,
+            start_time: slot + ':00',
+            end_time: String(endHour).padStart(2, '0') + ':00:00',
+            subject: purposeText,
+            lecturer: lecturerText || null,
+            status: 'PENDING'
+        };
+    });
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'SUBMITTING...';
+
+    const { data: insertedRows, error: insertErr } = await supabaseClient
+        .from('bookings')
+        .insert(rows)
+        .select();
+
+    if (insertErr) {
+        console.error('Supabase insert error:', insertErr);
+        alert('Failed to save booking to database: ' + insertErr.message);
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'CONFIRM BOOKING';
+        return;
+    }
+
+    const ref = 'BK-' + Math.floor(100000 + Math.random()*900000);
+    const booking = {
+        reference: ref,
+        facilityId: f.id,
+        facility: f.name,
+        date: dateEl.value,
+        slots: selectedSlots,
+        purpose: purposeText,
+        status: 'PENDING'
+    };
+
+    back.remove();
+    await renderQuota();
+    renderGrid();
+    showSuccess(booking);
+};
+
+        function close(){ back.remove(); }
+        back.querySelector('.x').onclick = close;
+        back.querySelectorAll('[data-close]').forEach(b => b.onclick = close);
+        back.addEventListener('click', (e)=>{ if(e.target===back) close(); });
+
+        document.body.appendChild(back);
+        renderSlots();
+    }
+
+    function showSuccess(b) {
+        const back = document.createElement('div');
+        back.className = 'bk-modal-backdrop';
+        
+        const displaySlots = Array.isArray(b.slots) ? b.slots.join(', ') : b.slot;
+        const totalHours = Array.isArray(b.slots) ? b.slots.length : 1;
+
+        back.innerHTML = `
+          <div class="bk-modal" style="max-width:440px">
+            <div class="bk-modal-head success"><span><i class="bi bi-check-circle-fill"></i> BOOKING REQUESTED</span></div>
+            <div class="bk-modal-body text-center">
+              <div class="bk-icon-big"><i class="bi bi-check-circle-fill"></i></div>
+              <h5 class="font-bungee mb-1">Reservation Submitted</h5>
+              <div class="bk-ref-badge">${b.reference}</div>
+              <p class="small mb-0">${b.facility}<br>${b.date} &bull; <b>${displaySlots}</b> (${totalHours} hour${totalHours > 1 ? 's' : ''})<br>
+              Status: <b>PENDING APPROVAL</b></p>
+            </div>
+            <div class="bk-modal-foot">
+              <button class="btn btn-roblox btn-success text-white" data-close>OK</button>
+            </div>
+          </div>`;
+        const close=()=>back.remove();
+        back.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);
+        back.addEventListener('click',(e)=>{if(e.target===back) close();});
+        document.body.appendChild(back);
+    }
+
+    // UPDATED: renderQuota now reads directly from Supabase
+    // (filtered by currentUser & current week), no longer localStorage
+    async function renderQuota() {
+        const { start, end } = getWeekRange();
+
+        const { data: activeRows, error: activeErr } = await supabaseClient
+            .from('bookings')
+            .select('id')
+            .eq('booked_by', currentUser)
+            .neq('status', 'CANCELLED');
+
+        const { data: weekRows, error: weekErr } = await supabaseClient
+            .from('bookings')
+            .select('start_time')
+            .eq('booked_by', currentUser)
+            .neq('status', 'CANCELLED')
+            .gte('booking_date', start)
+            .lte('booking_date', end);
+
+        if (activeErr || weekErr) {
+            console.error('Failed to fetch quota:', activeErr || weekErr);
+            return;
+        }
+
+        const active = activeRows.length;
+        const hours = weekRows.length; // 1 row = 1 hour (per the insert structure)
+
+        const a = $('qActive'), h = $('qHours');
+        if (a) {
+            a.textContent = `${active} / ${MAX_ACTIVE}`;
+            a.className = 'q-value ' + (active >= MAX_ACTIVE ? 'warn' : 'ok');
+        }
+        if (h) {
+            h.textContent = `${hours} / ${MAX_WEEK_HOURS}`;
+            h.className = 'q-value ' + (hours >= MAX_WEEK_HOURS ? 'warn' : 'ok');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        if ($('navUser')) $('navUser').textContent = currentUser;
+        renderGrid();
+        await renderQuota();
+    });
+})();
+    </script>
+    <!-- ==========================================
+ 3. FAQ CHATBOT LOADER SCRIPT
+ ========================================== -->
+<script data-faq-loader="true">
+(function () {
+    if (window.__faqChatbotLoaderBound) return;
+    window.__faqChatbotLoaderBound = true;
+
+    var candidates = [
+        './faq-chatbot.js', 
+        '../faq-chatbot.js', 
+        '../../faq-chatbot.js', 
+        '../../../faq-chatbot.js'
+    ];
+    var index = 0;
+
+    function tryLoad() {
+        if (index >= candidates.length) return;
+        var script = document.createElement('script');
+        script.src = candidates[index];
+        script.onload = function () {
+            if (window.__rbxFaqLoaded) {
+                console.log('FAQ chatbot loaded from: ' + candidates[index]);
+            }
+        };
+        script.onerror = function () {
+            index += 1;
+            tryLoad();
+        };
+        document.head.appendChild(script);
+    }
+
+    tryLoad();
+})();
+</script>
+</body>
+</html>
