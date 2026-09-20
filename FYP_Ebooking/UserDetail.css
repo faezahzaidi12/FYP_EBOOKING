@@ -78,3 +78,33 @@ body, html {
     padding: 0 !important;
     min-height: 100vh;
 }
+html, body {
+    height: auto !important;
+    overflow-y: auto !important;   /* benarkan scroll */
+    overflow-x: hidden;
+}
+
+#myVideo {
+    position: fixed;      /* video stay di belakang, tak ikut scroll */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+.video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.profile-container {
+    position: relative;
+    z-index: 1;           /* pastikan content atas video */
+    min-height: 100vh;
+}

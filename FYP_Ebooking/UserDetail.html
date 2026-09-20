@@ -16,11 +16,86 @@
     <!-- Supabase JS SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>
+    
+    <style>
+        /* Kad Utama Melengkung (Curved) */
+        .profile-card {
+            border-radius: 28px !important;
+            border: 4px solid #393B3D;
+            background: #ffffff;
+            padding: 35px 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Kotak Avatar yang boleh diklik untuk tukar gambar */
+        .avatar-box-lg {
+            width: 120px;
+            height: 120px;
+            border: 4px solid #393B3D;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background: #fff;
+            margin: 0 auto;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .avatar-box-lg:hover {
+            transform: scale(1.05);
+        }
+
+        /* Lapisan icon kamera bila hover atas gambar */
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .avatar-box-lg:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .avatar-overlay i {
+            font-size: 26px;
+        }
+
+        .avatar-overlay span {
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        /* Kotak Info */
+        .info-row {
+            border-radius: 12px;
+            border: 2px solid #393B3D;
+            padding: 10px 14px;
+            background: #ffffff;
+        }
+
+        /* Butang SAVE CHANGES */
+        .btn-roblox {
+            border-radius: 16px !important;
+        }
+    </style>
 </head>
 <body>
     <video autoplay muted loop id="myVideo">
         <source src="mainBG.mp4" type="video/mp4">
     </video>
+    <div class="video-overlay"></div>
 
     <nav class="navbar navbar-dark p-3 shadow">
         <div class="container text-uppercase">
@@ -39,11 +114,23 @@
             
             <!-- Avatar & Username Header -->
             <div class="text-center mb-4">
-                <div class="avatar-box-lg">
-                    <img id="pAvatar" src="" style="width: 100%; height: 100%;">
+                
+                <!-- KOTAK GAMBAR AVATAR (KLIK UNTUK TUKAR) -->
+                <div class="avatar-box-lg mb-2" onclick="document.getElementById('avatarFileInput').click()" title="Klik untuk tukar gambar">
+                    <img id="pAvatar" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="avatar-overlay">
+                        <i class="bi bi-camera-fill"></i>
+                        <span>CHANGE</span>
+                    </div>
                 </div>
+
+                <!-- Hidden Input File untuk upload -->
+                <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="previewAndProcessAvatar(event)">
+                
+                <p class="text-muted fw-bold mb-2" style="font-size: 11px;">(KLIK GAMBAR UNTUK TUKAR)</p>
+
                 <h2 class="font-bungee text-dark mb-1" id="pUserHeader">LOADING...</h2>
-                <span class="badge bg-success border-2 border-dark px-3 py-2 fs-6">
+                <span class="badge bg-success border-2 border-dark px-3 py-2 fs-6" style="border-radius: 20px;">
                     <i class="bi bi-patch-check-fill"></i> VERIFIED PLAYER
                 </span>
             </div>
@@ -51,13 +138,13 @@
             <hr class="border-3 border-dark mb-4">
 
             <!-- Senarai Maklumat Pendaftaran -->
-            <!-- 1. FULL NAME (Kunci / Tak Boleh Edit) -->
+            <!-- 1. FULL NAME -->
             <div class="info-row d-flex justify-content-between align-items-center mb-3">
                 <span class="fw-bold text-muted me-2"><i class="bi bi-person-fill text-primary"></i> FULL NAME:</span>
                 <span class="fw-bold text-dark fs-6" id="pFullName">---</span>
             </div>
 
-            <!-- 2. IC NUMBER (Kunci / Tak Boleh Edit) -->
+            <!-- 2. IC NUMBER -->
             <div class="info-row d-flex justify-content-between align-items-center mb-3">
                 <span class="fw-bold text-muted me-2"><i class="bi bi-card-heading text-primary"></i> IC NUMBER:</span>
                 <span class="fw-bold text-dark fs-6" id="pIC">---</span>
@@ -66,18 +153,18 @@
             <!-- 3. EMAIL (BOLEH EDIT) -->
             <div class="info-row d-flex justify-content-between align-items-center mb-3">
                 <span class="fw-bold text-muted me-2" style="min-width: 100px;"><i class="bi bi-envelope-fill text-primary"></i> EMAIL:</span>
-                <input type="email" id="pEmailInput" class="form-control border-2 border-dark text-end fw-bold py-1" style="background: white;" placeholder="ENTER EMAIL">
+                <input type="email" id="pEmailInput" class="form-control border-2 border-dark text-end fw-bold py-1" style="background: white; border-radius: 8px;" placeholder="ENTER EMAIL">
             </div>
 
             <!-- 4. PHONE NO (BOLEH EDIT) -->
             <div class="info-row d-flex justify-content-between align-items-center mb-3">
                 <span class="fw-bold text-muted me-2" style="min-width: 120px;"><i class="bi bi-telephone-fill text-primary"></i> PHONE NO:</span>
-                <input type="text" id="pPhoneInput" class="form-control border-2 border-dark text-end fw-bold py-1" style="background: white;" placeholder="ENTER PHONE">
+                <input type="text" id="pPhoneInput" class="form-control border-2 border-dark text-end fw-bold py-1" style="background: white; border-radius: 8px;" placeholder="ENTER PHONE">
             </div>
 
-            <!-- BUTANG SIMPAN & PATAH BALIK -->
+            <!-- BUTANG SIMPAN -->
             <div class="mt-4 pt-2">
-                <button class="btn btn-roblox btn-success w-100 py-3 fs-5" onclick="saveProfileChanges()">
+                <button id="btnSave" class="btn btn-roblox btn-success w-100 py-3 fs-5" onclick="saveProfileChanges()">
                     <i class="bi bi-check-circle-fill me-2"></i> SAVE CHANGES
                 </button>
             </div>
@@ -85,53 +172,199 @@
         </div>
     </div>
 
-    <!-- Script Tarik Data dari LocalStorage -->
+    <!-- Script Video Background -->
     <script>
-    window.onload = function() {
-        // Tarik data pengguna yang disimpan dari index page semasa Login
-        const savedData = JSON.parse(localStorage.getItem('userAccount'));
+    (function () {
+        const bgVideo = document.getElementById('myVideo');
+        if (bgVideo) {
+            const savedTime = localStorage.getItem('bgVideoTime');
+            if (savedTime) {
+                bgVideo.currentTime = parseFloat(savedTime);
+            }
 
-        if (savedData) {
-            const username = savedData.username || savedData.fullname || "PLAYER";
+            bgVideo.addEventListener('loadeddata', function() {
+                bgVideo.classList.add('loaded');
+            });
+
+            if (bgVideo.readyState >= 3) {
+                bgVideo.classList.add('loaded');
+            }
+
+            setInterval(() => {
+                localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+            }, 500);
+
+            window.addEventListener('beforeunload', () => {
+                localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+            });
+        }
+    })();
+    </script>
+
+    <!-- Script Supabase & Profile Logic -->
+    <script>
+    const _supabase = window.supabaseClient || null;
+    let uploadedAvatarBase64 = null;
+
+    window.onload = async function() {
+        let savedData = JSON.parse(localStorage.getItem('userAccount')) || {};
+
+        // 1. Tarik data terkini terus dari Table 'profiles' di Supabase
+        if (_supabase) {
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    // Ambil dari table profiles
+                    const { data: profile } = await _supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (profile) {
+                        if (profile.phone) savedData.phone = profile.phone;
+                        if (profile.display_name) savedData.fullname = profile.display_name;
+                        if (profile.email) savedData.email = profile.email;
+                    }
+
+                    // Ambil metadata jika ada avatar
+                    const meta = user.user_metadata || {};
+                    if (meta.custom_avatar) savedData.customAvatar = meta.custom_avatar;
+                    if (meta.ic) savedData.ic = meta.ic;
+
+                    localStorage.setItem('userAccount', JSON.stringify(savedData));
+                }
+            } catch (err) {
+                console.warn("Gagal tarik user dari Supabase, menggunakan data cache:", err);
+            }
+        }
+
+        // 2. Paparkan ke dalam UI
+        if (savedData && (savedData.username || savedData.fullname || savedData.email)) {
+            const username = savedData.fullname || savedData.username || "PLAYER";
             
-            // Paparkan data pada paparan HTML
             document.getElementById('pUserHeader').innerText = username;
             document.getElementById('pFullName').innerText = savedData.fullname || "---";
             document.getElementById('pIC').innerText = savedData.ic || "---";
             document.getElementById('pEmailInput').value = savedData.email || "";
             document.getElementById('pPhoneInput').value = savedData.phone || "";
 
-            // Avatar berdasarkan username
-            document.getElementById('pAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(username)}`;
+            // Papar gambar avatar
+            if (savedData.customAvatar) {
+                document.getElementById('pAvatar').src = savedData.customAvatar;
+                uploadedAvatarBase64 = savedData.customAvatar;
+            } else {
+                document.getElementById('pAvatar').src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(username)}`;
+            }
         } else {
-            // Jika pengguna belum log masuk
             alert("Sila log masuk terlebih dahulu!");
             window.location.href = "index.html";
         }
     };
 
-    // Fungsi Simpan Perubahan Emel & Telefon
-    function saveProfileChanges() {
-        const newEmail = document.getElementById('pEmailInput').value.trim();
-        const newPhone = document.getElementById('pPhoneInput').value.trim();
+    // Fungsi kecilkan saiz gambar secara automatik
+    function previewAndProcessAvatar(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-        if (!newEmail || !newPhone) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const max_size = 300;
+
+                if (width > height) {
+                    if (width > max_size) {
+                        height = Math.round((height * max_size) / width);
+                        width = max_size;
+                    }
+                } else {
+                    if (height > max_size) {
+                        width = Math.round((width * max_size) / height);
+                        height = max_size;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                uploadedAvatarBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                document.getElementById('pAvatar').src = uploadedAvatarBase64;
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Fungsi SIMPAN TERUS KE TABLE 'profiles' SUPABASE
+    async function saveProfileChanges() {
+        const newEmail = document.getElementById('pEmailInput').value.trim();
+        const rawPhone = document.getElementById('pPhoneInput').value.trim();
+        const btnSave = document.getElementById('btnSave');
+
+        if (!newEmail || !rawPhone) {
             alert("SILA ISI KEDUA-DUA EMEL DAN NOMBOR TELEFON!");
             return;
         }
 
-        // Ambil data akaun semasa
+        btnSave.disabled = true;
+        btnSave.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> SAVING...`;
+
         let savedData = JSON.parse(localStorage.getItem('userAccount')) || {};
-
-        // Kemaskini email dan phone sahaja
         savedData.email = newEmail;
-        savedData.phone = newPhone;
+        savedData.phone = rawPhone;
+        if (uploadedAvatarBase64) {
+            savedData.customAvatar = uploadedAvatarBase64;
+        }
 
-        // Simpan semula ke LocalStorage
-        localStorage.setItem('userAccount', JSON.stringify(savedData));
+        try {
+            if (_supabase) {
+                const { data: { user } } = await _supabase.auth.getUser();
 
-        alert("PROFIL BERJAYA DIKEMASKINI!");
-        window.location.href = 'UserDetail.html';
+                if (user) {
+                    // 1. KEMASKINI DIRECT KE TABLE 'profiles' DI SUPABASE
+                    const { error: profileError } = await _supabase
+                        .from('profiles')
+                        .update({
+                            phone: rawPhone,
+                            email: newEmail,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', user.id);
+
+                    if (profileError) {
+                        console.error("Gagal update table profiles:", profileError);
+                        alert("Ralat Table Profiles: " + profileError.message);
+                    }
+
+                    // 2. Simpan gambar dalam user metadata
+                    await _supabase.auth.updateUser({
+                        data: {
+                            phone: rawPhone,
+                            custom_avatar: uploadedAvatarBase64 || savedData.customAvatar || null
+                        }
+                    });
+                }
+            }
+
+            // 3. Simpan ke local cache
+            localStorage.setItem('userAccount', JSON.stringify(savedData));
+
+            alert("NOMBOR TELEFON & PROFIL BERJAYA DISIMPAN!");
+            window.location.reload();
+
+        } catch (err) {
+            console.error(err);
+            alert("Ralat semasa menyimpan: " + err.message);
+        } finally {
+            btnSave.disabled = false;
+            btnSave.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> SAVE CHANGES`;
+        }
     }
     </script>
 </body>

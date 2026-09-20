@@ -2,139 +2,557 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ROOM MANAGEMENT | ADMIN</title>
-    <!-- Framework & Fonts -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- Link ke CSS Utama & Admin -->
-    <link rel="stylesheet" href="style_index.css">
-    <link rel="stylesheet" href="style_settingadmin.css">
-</head>
-<body style="background-color: #f0f2f5;">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark p-3 shadow-sm" style="background-color: #0d36ff; border-bottom: 5px solid #393B3D;">
+    <link rel="stylesheet" href="../style_index.css">
+    <link rel="stylesheet" href="style_settingadmin.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-config.js"></script>
+    <script src="../auth-guard.js"></script>
+
+    <style>
+        html, body {
+            min-height: 100vh;
+            height: auto !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .font-bungee { font-family: 'Bungee', cursive; }
+
+        .asset-toolbar {
+            background: #fff;
+            border: 4px solid #393B3D;
+            box-shadow: 7px 7px 0 rgba(0,0,0,.15);
+            padding: 18px;
+            margin-bottom: 24px;
+        }
+
+        .room-asset-card {
+            border: 4px solid #393B3D;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 7px 7px 0 rgba(0,0,0,.18);
+        }
+
+        .room-preview-sm {
+            height: 150px;
+            position: relative;
+            background: #9a9a9a;
+            border-bottom: 4px solid #393B3D;
+            overflow: hidden;
+        }
+
+        .room-preview-sm img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .room-placeholder {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Bungee', cursive;
+            background: #9a9a9a;
+        }
+
+        .status-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: 2px solid #393B3D;
+            font-family: 'Bungee', cursive;
+        }
+
+        .asset-mini-list {
+            border: 2px dashed #bbb;
+            padding: 12px;
+        }
+
+        .asset-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid #ddd;
+            padding: 6px 0;
+        }
+
+        .asset-row:last-child { border-bottom: 0; }
+
+        .asset-value {
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        .group-heading {
+            font-family: 'Bungee', cursive;
+            background: #393B3D;
+            color: white;
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin: 18px 0 14px;
+        }
+
+        .modal-content {
+            border: 5px solid #393B3D !important;
+            border-radius: 0 !important;
+        }
+
+        @media (max-width: 576px) {
+            .asset-toolbar .d-flex {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .asset-toolbar .btn,
+            .asset-toolbar .form-select {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark p-3 shadow-sm"
+         style="background-color:#0d36ff;border-bottom:5px solid #393B3D;">
         <div class="container text-uppercase">
-            <a class="navbar-brand font-bungee text-dark d-flex align-items-center" href="#">
+            <span class="navbar-brand font-bungee text-dark d-flex align-items-center">
                 <i class="bi bi-gear-wide-connected me-2"></i> MAP & ASSET EDITOR
-            </a>
-            <button class="btn btn-dark btn-sm font-bungee border-2 border-white" onclick="window.location.href='admin_home.html'">BACK</button>
+            </span>
+            <button class="btn btn-dark btn-sm font-bungee border-2 border-white"
+                    onclick="window.location.href='home_admin.html'">
+                BACK
+            </button>
         </div>
     </nav>
 
     <div class="container mt-5 pb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="font-bungee text-dark mb-0">ROOM INVENTORY</h2>
-            <button class="btn btn-roblox btn-success" onclick="alert('Feature: Add New Room')">
-                <i class="bi bi-plus-lg"></i> ADD NEW ROOM
-            </button>
-        </div>
+        <div class="asset-toolbar">
+            <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <div>
+                    <h2 class="font-bungee text-dark mb-1">ROOM INVENTORY</h2>
+                </div>
 
-        <!-- GRID SENARAI BILIK -->
-        <div class="row g-4 text-uppercase">
-            
-            <!-- BILIK 1 (DFK 1) -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card room-asset-card h-100">
-                    <div class="room-preview-sm">
-                        <img src="https://media.architecturaldigest.com/photos/573489112959663327663f7d/16:9/w_2560%2Cc_limit/modern-office-spaces-01.jpg" alt="BK1">
-                        <span class="badge bg-success status-tag">ONLINE</span>
-                    </div>
-                    <div class="card-body">
-                        <h4 class="font-bungee mb-3">ROOM DFK 1</h4>
-                        <div class="asset-mini-list mb-4">
-                            <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
-                                <span><i class="bi bi-person-workspace"></i> CHAIRS:</span>
-                                <span class="fw-bold text-primary">20</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
-                                <span><i class="bi bi-table"></i> TABLES:</span>
-                                <span class="fw-bold text-primary">20</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span><i class="bi bi-pc-display"></i> COMPUTERS:</span>
-                                <span class="fw-bold text-primary">20</span>
-                            </div>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-roblox btn-primary" onclick="openEditModal('DFK 1', 20, 20, 20)">
-                                <i class="bi bi-pencil-square"></i> EDIT ASSETS
-                            </button>
-                            <button class="btn btn-roblox btn-warning text-dark" onclick="confirm('Put room in Maintenance Mode?')">
-                                <i class="bi bi-tools"></i> MAINTENANCE
-                            </button>
-                        </div>
-                    </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <select id="groupFilter" class="form-select border-3 border-dark" style="width:auto;">
+                        <option value="ALL">ALL FACILITIES</option>
+                        <option value="DFK">DFK BUILDING</option>
+                        <option value="LIBRARY">LIBRARY</option>
+                        <option value="SPORT">SPORT FACILITY</option>
+                    </select>
+
+                    <button class="btn btn-dark fw-bold" onclick="loadRooms()">
+                        <i class="bi bi-arrow-clockwise"></i> REFRESH
+                    </button>
+
+                    <button class="btn btn-roblox btn-success" onclick="openAddRoomModal()">
+                        <i class="bi bi-plus-lg"></i> ADD NEW ROOM
+                    </button>
                 </div>
             </div>
-
-            <!-- BILIK 2 (DFK 2) -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card room-asset-card h-100 opacity-75">
-                    <div class="room-preview-sm" style="filter: grayscale(1);">
-                        <div class="d-flex align-items-center justify-content-center h-100 bg-secondary text-white font-bungee">NO PHOTO</div>
-                        <span class="badge bg-danger status-tag">OFFLINE</span>
-                    </div>
-                    <div class="card-body text-muted">
-                        <h4 class="font-bungee mb-3">ROOM DFK 2</h4>
-                        <p class="small fw-bold">This room is currently hidden from players.</p>
-                        <button class="btn btn-roblox btn-success w-100" onclick="alert('Room DFK 2 is now Online!')">ENABLE ROOM</button>
-                    </div>
-                </div>
-            </div>
-
         </div>
+
+        <div id="roomSections"></div>
     </div>
 
-    <!-- MODAL EDIT ASSET (Ini yang paling penting untuk Admin) -->
+    <!-- EDIT ASSET MODAL -->
     <div class="modal fade" id="editRoomModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content border-5 border-dark rounded-0">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
                 <div class="modal-header bg-primary text-white border-0">
                     <h5 class="modal-title font-bungee">EDIT <span id="editRoomName">---</span></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+
                 <div class="modal-body text-uppercase">
-                    <div class="mb-3">
-                        <label class="fw-bold small">TOTAL CHAIRS:</label>
-                        <input type="number" id="editChair" class="form-control border-3 border-dark fw-bold">
-                    </div>
-                    <div class="mb-3">
-                        <label class="fw-bold small">TOTAL TABLES:</label>
-                        <input type="number" id="editTable" class="form-control border-3 border-dark fw-bold">
-                    </div>
-                    <div class="mb-3">
-                        <label class="fw-bold small">TOTAL COMPUTERS:</label>
-                        <input type="number" id="editPC" class="form-control border-3 border-dark fw-bold">
-                    </div>
-                    <div class="mb-1">
-                        <label class="fw-bold small">UPDATE PHOTO:</label>
-                        <input type="file" class="form-control border-3 border-dark">
+                    <input type="hidden" id="editOriginalRoom">
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="fw-bold small">CAPACITY</label>
+                            <input type="number" min="0" id="editCapacity" class="form-control border-3 border-dark fw-bold">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="fw-bold small">TOTAL CHAIRS</label>
+                            <input type="number" min="0" id="editChair" class="form-control border-3 border-dark fw-bold">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="fw-bold small">TOTAL TABLES</label>
+                            <input type="number" min="0" id="editTable" class="form-control border-3 border-dark fw-bold">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="fw-bold small">TOTAL COMPUTERS</label>
+                            <input type="number" min="0" id="editPC" class="form-control border-3 border-dark fw-bold">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="fw-bold small">PROJECTOR</label>
+                            <input type="number" min="0" id="editProjector" class="form-control border-3 border-dark fw-bold">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="fw-bold small">AIR CONDITIONER</label>
+                            <input type="number" min="0" id="editAC" class="form-control border-3 border-dark fw-bold">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="fw-bold small">WHITEBOARD</label>
+                            <input type="number" min="0" id="editWhiteboard" class="form-control border-3 border-dark fw-bold">
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="fw-bold small">PHOTO URL</label>
+                            <input type="url" id="editPhoto" class="form-control border-3 border-dark"
+                                   placeholder="https://...">
+                        </div>
                     </div>
                 </div>
+
                 <div class="modal-footer border-0">
-                    <button class="btn btn-roblox btn-success w-100 py-2 fs-5" onclick="saveAssets()">SAVE CHANGES</button>
+                    <button class="btn btn-roblox btn-success w-100 py-2 fs-5" onclick="saveAssets()">
+                        SAVE CHANGES
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD ROOM MODAL -->
+    <div class="modal fade" id="addRoomModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white border-0">
+                    <h5 class="modal-title font-bungee">ADD NEW ROOM</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-uppercase">
+                    <div class="mb-3">
+                        <label class="fw-bold small">ROOM NAME</label>
+                        <input id="newRoomName" class="form-control border-3 border-dark" placeholder="EX: DFK 11">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold small">STATUS</label>
+                        <select id="newRoomStatus" class="form-select border-3 border-dark">
+                            <option value="available">AVAILABLE</option>
+                            <option value="maintenance">MAINTENANCE</option>
+                            <option value="offline">OFFLINE</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold small">PAGE URL (OPTIONAL)</label>
+                        <input id="newRoomPageUrl" class="form-control border-3 border-dark"
+                               placeholder="Dfk/BookingDfk.html">
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button class="btn btn-success w-100 fw-bold" onclick="addNewRoom()">CREATE ROOM</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        function openEditModal(name, chair, table, pc) {
-            document.getElementById('editRoomName').innerText = name;
-            document.getElementById('editChair').value = chair;
-            document.getElementById('editTable').value = table;
-            document.getElementById('editPC').value = pc;
-            new bootstrap.Modal(document.getElementById('editRoomModal')).show();
+        const db = window.supabaseClient;
+        let rooms = [];
+        let assetsByRoom = {};
+
+        function esc(v) {
+            return String(v ?? '').replace(/[&<>"']/g, c => ({
+                '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+            }[c]));
         }
 
-        function saveAssets() {
-            alert("SUCCESS! Assets for " + document.getElementById('editRoomName').innerText + " have been updated in the cloud.");
-            location.reload();
+        function roomGroup(roomName) {
+            const r = String(roomName || '').toUpperCase();
+
+            if (r.startsWith('DFK')) return 'DFK';
+
+            if (['CENTURY 21ST', 'LITERASI 1', 'LITERASI 2'].includes(r)) {
+                return 'LIBRARY';
+            }
+
+            return 'SPORT';
         }
+
+        function groupLabel(key) {
+            if (key === 'DFK') return 'DFK BUILDING';
+            if (key === 'LIBRARY') return 'LIBRARY';
+            return 'SPORT FACILITY';
+        }
+
+        function statusInfo(status) {
+            const s = String(status || 'available').toLowerCase();
+
+            if (s === 'maintenance') {
+                return { label:'MAINTENANCE', badge:'bg-warning text-dark', card:'', enabled:false };
+            }
+
+            if (s === 'offline' || s === 'disabled' || s === 'unavailable') {
+                return { label:'OFFLINE', badge:'bg-danger', card:'opacity-75', enabled:false };
+            }
+
+            return { label:'ONLINE', badge:'bg-success', card:'', enabled:true };
+        }
+
+        function assetRow(icon, label, value) {
+            return `
+                <div class="asset-row">
+                    <span><i class="bi ${icon}"></i> ${label}</span>
+                    <span class="asset-value">${esc(value ?? 0)}</span>
+                </div>
+            `;
+        }
+
+        function renderRooms() {
+            const holder = document.getElementById('roomSections');
+            const filter = document.getElementById('groupFilter').value;
+
+            const filtered = rooms.filter(r => filter === 'ALL' || roomGroup(r.room_name) === filter);
+
+            if (!filtered.length) {
+                holder.innerHTML = '<div class="alert alert-light border-3 border-dark fw-bold">NO ROOMS FOUND.</div>';
+                return;
+            }
+
+            const groups = ['DFK', 'LIBRARY', 'SPORT'];
+            let html = '';
+
+            groups.forEach(group => {
+                const groupRooms = filtered.filter(r => roomGroup(r.room_name) === group);
+                if (!groupRooms.length) return;
+
+                html += `<div class="group-heading">${groupLabel(group)}</div>`;
+                html += '<div class="row g-4 text-uppercase">';
+
+                groupRooms.forEach(room => {
+                    const asset = assetsByRoom[room.room_name] || {};
+                    const st = statusInfo(room.status);
+
+                    html += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card room-asset-card h-100 ${st.card}">
+                            <div class="room-preview-sm">
+                                ${
+                                    asset.photo_url
+                                    ? `<img src="${esc(asset.photo_url)}" alt="${esc(room.room_name)}">`
+                                    : `<div class="room-placeholder">NO PHOTO</div>`
+                                }
+                                <span class="badge ${st.badge} status-tag">${st.label}</span>
+                            </div>
+
+                            <div class="card-body">
+                                <h4 class="font-bungee mb-3">${esc(room.room_name)}</h4>
+
+                                <div class="asset-mini-list mb-4">
+                                    ${assetRow('bi-people-fill', 'CAPACITY:', asset.capacity)}
+                                    ${assetRow('bi-person-workspace', 'CHAIRS:', asset.chairs)}
+                                    ${assetRow('bi-table', 'TABLES:', asset.tables)}
+                                    ${assetRow('bi-pc-display', 'COMPUTERS:', asset.computers)}
+                                    ${assetRow('bi-projector-fill', 'PROJECTOR:', asset.projector)}
+                                    ${assetRow('bi-wind', 'AIR CONDITIONER:', asset.air_conditioner)}
+                                    ${assetRow('bi-easel2-fill', 'WHITEBOARD:', asset.whiteboard)}
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-roblox btn-primary"
+                                            onclick="openEditModal('${esc(room.room_name)}')">
+                                        <i class="bi bi-pencil-square"></i> EDIT ASSETS
+                                    </button>
+
+                                    ${
+                                        st.label === 'MAINTENANCE'
+                                        ? `<button class="btn btn-roblox btn-success" onclick="setRoomStatus('${esc(room.room_name)}','available')">
+                                               <i class="bi bi-check-circle"></i> ENABLE ROOM
+                                           </button>`
+                                        : `<button class="btn btn-roblox btn-warning text-dark" onclick="setRoomStatus('${esc(room.room_name)}','maintenance')">
+                                               <i class="bi bi-tools"></i> MAINTENANCE
+                                           </button>`
+                                    }
+
+                                    ${
+                                        st.label === 'OFFLINE'
+                                        ? `<button class="btn btn-roblox btn-success" onclick="setRoomStatus('${esc(room.room_name)}','available')">
+                                               <i class="bi bi-power"></i> ENABLE ROOM
+                                           </button>`
+                                        : `<button class="btn btn-roblox btn-danger text-white" onclick="setRoomStatus('${esc(room.room_name)}','offline')">
+                                               <i class="bi bi-power"></i> DISABLE ROOM
+                                           </button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+
+                html += '</div>';
+            });
+
+            holder.innerHTML = html;
+        }
+
+        async function loadRooms() {
+            if (!db) {
+                alert('Supabase client tidak tersedia.');
+                return;
+            }
+
+            const [{ data: classroomData, error: classroomError },
+                   { data: assetData, error: assetError }] = await Promise.all([
+                db.from('classrooms')
+                  .select('room_name, status, page_url')
+                  .order('room_name', { ascending:true }),
+
+                db.from('room_assets')
+                  .select('*')
+            ]);
+
+            if (classroomError) {
+                console.error(classroomError);
+                alert('Gagal load classrooms: ' + classroomError.message);
+                return;
+            }
+
+            if (assetError) {
+                console.warn('room_assets belum tersedia / RLS block:', assetError);
+            }
+
+            rooms = classroomData || [];
+            assetsByRoom = {};
+
+            (assetData || []).forEach(a => {
+                assetsByRoom[a.room_name] = a;
+            });
+
+            renderRooms();
+        }
+
+        function openEditModal(roomName) {
+            const a = assetsByRoom[roomName] || {};
+
+            document.getElementById('editOriginalRoom').value = roomName;
+            document.getElementById('editRoomName').innerText = roomName;
+            document.getElementById('editCapacity').value = a.capacity ?? 0;
+            document.getElementById('editChair').value = a.chairs ?? 0;
+            document.getElementById('editTable').value = a.tables ?? 0;
+            document.getElementById('editPC').value = a.computers ?? 0;
+            document.getElementById('editProjector').value = a.projector ?? 0;
+            document.getElementById('editAC').value = a.air_conditioner ?? 0;
+            document.getElementById('editWhiteboard').value = a.whiteboard ?? 0;
+            document.getElementById('editPhoto').value = a.photo_url ?? '';
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('editRoomModal')).show();
+        }
+
+        async function saveAssets() {
+            const roomName = document.getElementById('editOriginalRoom').value;
+
+            const payload = {
+                room_name: roomName,
+                capacity: Number(document.getElementById('editCapacity').value || 0),
+                chairs: Number(document.getElementById('editChair').value || 0),
+                tables: Number(document.getElementById('editTable').value || 0),
+                computers: Number(document.getElementById('editPC').value || 0),
+                projector: Number(document.getElementById('editProjector').value || 0),
+                air_conditioner: Number(document.getElementById('editAC').value || 0),
+                whiteboard: Number(document.getElementById('editWhiteboard').value || 0),
+                photo_url: document.getElementById('editPhoto').value.trim() || null,
+                updated_at: new Date().toISOString()
+            };
+
+            const { error } = await db
+                .from('room_assets')
+                .upsert(payload, { onConflict:'room_name' });
+
+            if (error) {
+                alert('Gagal simpan asset: ' + error.message);
+                console.error(error);
+                return;
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('editRoomModal'))?.hide();
+            await loadRooms();
+        }
+
+        async function setRoomStatus(roomName, status) {
+            const label = status === 'maintenance'
+                ? 'put this room into maintenance mode'
+                : status === 'offline'
+                    ? 'disable this room'
+                    : 'enable this room';
+
+            if (!confirm(`Are you sure you want to ${label}?`)) return;
+
+            const { error } = await db
+                .from('classrooms')
+                .update({ status })
+                .eq('room_name', roomName);
+
+            if (error) {
+                alert('Gagal update room status: ' + error.message);
+                console.error(error);
+                return;
+            }
+
+            await loadRooms();
+        }
+
+        function openAddRoomModal() {
+            document.getElementById('newRoomName').value = '';
+            document.getElementById('newRoomStatus').value = 'available';
+            document.getElementById('newRoomPageUrl').value = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('addRoomModal')).show();
+        }
+
+        async function addNewRoom() {
+            const room_name = document.getElementById('newRoomName').value.trim().toUpperCase();
+            const status = document.getElementById('newRoomStatus').value;
+            const page_url = document.getElementById('newRoomPageUrl').value.trim() || null;
+
+            if (!room_name) {
+                alert('Please enter a room name.');
+                return;
+            }
+
+            const { error } = await db
+                .from('classrooms')
+                .insert({ room_name, status, page_url });
+
+            if (error) {
+                alert('Gagal tambah room: ' + error.message);
+                console.error(error);
+                return;
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('addRoomModal'))?.hide();
+            await loadRooms();
+        }
+
+        document.getElementById('groupFilter').addEventListener('change', renderRooms);
+        document.addEventListener('DOMContentLoaded', loadRooms);
     </script>
 </body>
 </html>

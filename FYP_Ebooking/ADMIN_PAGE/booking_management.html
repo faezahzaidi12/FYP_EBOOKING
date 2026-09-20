@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOOKING MANAGEMENT | ADMIN</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style_index.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth-guard.js"></script>
+
+<style>
+:root{
+  --dark:#393B3D;
+  --blue:#2196f3;
+  --red:#dc3545;
+  --green:#28a745;
+  --yellow:#ffc107;
+  --white:#fff;
+}
+html,body{
+  min-height:100vh;
+  height:auto!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+body{
+  margin:0;
+  padding-bottom:60px;
+  font-family:'Poppins',sans-serif;
+  background:#0d0d0d;
+}
+.font-bungee{font-family:'Bungee',cursive}
+#bgVideo{
+  position:fixed; inset:0; width:100%; height:100%;
+  object-fit:cover; z-index:-2;
+}
+.page-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.58); z-index:-1;
+}
+.admin-nav{
+  background:#2c2c2c!important;
+  border-bottom:5px solid var(--blue);
+}
+.main-wrap{max-width:1250px;margin:0 auto;padding:28px 18px 60px}
+.hero-card{
+  background:#fff;
+  border:4px solid #000;
+  box-shadow:8px 8px 0 rgba(0,0,0,.35);
+  padding:22px;
+  margin-bottom:22px;
+}
+.management-tabs{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.management-tabs button{
+  border:3px solid #000;
+  font-family:'Bungee',cursive;
+  padding:11px 18px;
+  background:#fff;
+  color:#222;
+  box-shadow:4px 4px 0 rgba(0,0,0,.25);
+}
+.management-tabs button.active{
+  background:var(--blue);
+  color:#fff;
+}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* BOOKING RECORDS */
+.record-toolbar{
+  background:#fff;
+  border:4px solid #000;
+  padding:16px;
+  margin-bottom:18px;
+}
+.record-table-wrap{
+  background:#fff;
+  border:4px solid #000;
+  box-shadow:8px 8px 0 rgba(0,0,0,.32);
+  overflow:auto;
+}
+.record-table{min-width:1050px;margin:0!important}
+.record-table th{
+  background:#6ac2f2!important;
+  color:#111!important;
+  border:2px solid #393B3D!important;
+  font-family:'Bungee',cursive;
+  font-size:.74rem;
+  white-space:nowrap;
+}
+.record-table td{
+  vertical-align:middle;
+  border:1px solid #bbb;
+  font-size:.85rem;
+}
+.status-badge{
+  display:inline-block;
+  border:2px solid #333;
+  padding:4px 8px;
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.st-pending{background:#fff3cd;color:#664d03}
+.st-checked{background:#cfe2ff;color:#084298}
+.st-cancelled{background:#f8d7da;color:#842029}
+.st-other{background:#e2e3e5;color:#41464b}
+.empty-records{padding:45px!important;text-align:center;color:#777}
+
+/* LIVE ROOM STATUS */
+.lp-header-card,.lp-room-card{
+  background:#fff;border:4px solid #000;border-radius:4px;
+}
+.lp-clock{
+  background:#000;color:#ffc107;border:3px solid #444;
+  border-radius:6px;padding:12px 20px;text-align:center;
+}
+.lp-clock .time{font-family:'Bungee',cursive;font-size:2rem}
+.lp-legend span{
+  border:2px solid #000;border-radius:4px;padding:6px 14px;
+  font-weight:700;font-size:.85rem;margin:3px 5px 3px 0;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot-red{background:#dc3545}.dot-green{background:#28a745}.dot-yellow{background:#ffc107}
+.lp-summary-box{
+  border:3px solid #000;border-radius:4px;text-align:center;
+  padding:14px;background:#fff;
+}
+.lp-summary-box .num{font-family:'Bungee',cursive;font-size:2rem}
+.lp-section-title{
+  background:#2196f3;color:#fff;font-family:'Bungee',cursive;
+  padding:10px 18px;border-radius:4px;display:inline-block;text-transform:uppercase;
+}
+.lp-room-card .room-head{
+  padding:14px;border-bottom:3px solid #000;display:flex;
+  justify-content:space-between;align-items:center;
+}
+.lp-room-card h4{
+  font-family:'Bungee',cursive;margin:0;font-size:1rem;text-transform:uppercase;
+}
+.lp-status-pill{
+  border-radius:20px;padding:6px 14px;font-weight:700;font-size:.8rem;
+  text-transform:uppercase;color:#fff;display:inline-flex;align-items:center;gap:6px;
+}
+.lp-info-box{
+  border:2px solid #000;border-radius:4px;padding:8px 12px;
+  margin:10px 14px;background:#f8f9fa;
+}
+.lp-info-box .label{
+  font-weight:700;font-size:.75rem;text-decoration:underline;text-transform:uppercase;
+}
+.lp-info-box .val{font-size:.85rem;color:#333;margin-top:2px}
+.lp-footer{
+  padding:10px 14px;display:flex;justify-content:space-between;
+  font-size:.8rem;color:#555;
+}
+.lp-footer a{text-decoration:none;font-weight:700}
+
+@media(max-width:768px){
+  .hero-card h1{font-size:1.4rem}
+  .management-tabs{display:grid;grid-template-columns:1fr}
+  .management-tabs button{width:100%}
+}
+</style>
+</head>
+
+<body>
+<video autoplay muted loop playsinline id="bgVideo">
+  <source src="../mainBG.mp4" type="video/mp4">
+</video>
+<div class="page-overlay"></div>
+
+<nav class="navbar navbar-dark admin-nav p-3 shadow">
+  <div class="container d-flex justify-content-between align-items-center">
+    <span class="navbar-brand font-bungee mb-0">
+      <i class="bi bi-calendar2-week-fill me-2"></i>BOOKING MANAGEMENT
+    </span>
+    <button class="btn btn-primary btn-sm font-bungee border-2 border-white"
+            onclick="window.location.href='home_admin.html'">
+      <i class="bi bi-house-door"></i> DASHBOARD
+    </button>
+  </div>
+</nav>
+
+<div class="main-wrap">
+  <div class="hero-card">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
+      <div>
+        <h1 class="font-bungee mb-2">BOOKING MANAGEMENT</h1>
+      </div>
+      <div class="management-tabs">
+        <button id="btnRecords" class="active" onclick="showTab('records')">
+          <i class="bi bi-list-ul me-1"></i> BOOKING RECORDS
+        </button>
+        <button id="btnLive" onclick="showTab('live')">
+          <i class="bi bi-broadcast me-1"></i> LIVE ROOM STATUS
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 1: BOOKING RECORDS -->
+  <section id="recordsPanel" class="tab-panel active">
+    <div class="record-toolbar">
+      <div class="row g-2">
+        <div class="col-lg-4">
+          <input id="recordSearch" class="form-control border-2 border-dark"
+                 placeholder="Search user, room, subject...">
+        </div>
+        <div class="col-lg-3">
+          <select id="recordStatus" class="form-select border-2 border-dark">
+            <option value="">ALL STATUS</option>
+            <option value="PENDING">PENDING</option>
+            <option value="CHECKED_IN">CHECKED IN</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+        </div>
+        <div class="col-lg-3">
+          <input id="recordDate" type="date" class="form-control border-2 border-dark">
+        </div>
+        <div class="col-lg-2 d-grid">
+          <button class="btn btn-dark fw-bold" onclick="loadBookingRecords()">
+            <i class="bi bi-arrow-clockwise"></i> REFRESH
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="record-table-wrap">
+      <table class="table table-hover record-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>BOOKED BY</th>
+            <th>ROOM</th>
+            <th>DATE</th>
+            <th>TIME</th>
+            <th>SUBJECT</th>
+            <th>LECTURER</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody id="bookingRecordRows">
+          <tr><td colspan="8" class="empty-records">Loading booking records...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TAB 2: LIVE ROOM STATUS -->
+  <section id="livePanel" class="tab-panel">
+    <div class="lp-header-card p-4 mb-4">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h2 class="font-bungee text-uppercase mb-1">LIVE SESSION PREVIEW</h2>
+          <p class="text-muted fw-bold mb-3 text-uppercase small">
+            Current Status of Rooms & Facilities
+          </p>
+          <div class="lp-legend">
+            <span><span class="dot dot-red"></span>Ongoing</span>
+            <span><span class="dot dot-green"></span>Available</span>
+            <span><span class="dot dot-yellow"></span>Upcoming</span>
+          </div>
+        </div>
+        <div class="col-md-4 text-center mt-3 mt-md-0">
+          <div class="lp-clock">
+            <div class="time" id="lpClock">--:--:--</div>
+            <div class="small fw-bold" id="lpDate">-</div>
+            <div class="small text-muted">MALAYSIA's TIME (GMT+8)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2 text-uppercase">
+        <div class="col-md-4">
+          <div class="lp-summary-box">
+            <div class="num text-danger" id="lpOngoing">0</div>
+            <div class="fw-bold small">Ongoing</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="lp-summary-box">
+            <div class="num text-success" id="lpAvailable">0</div>
+            <div class="fw-bold small">Available</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="lp-summary-box">
+            <div class="num text-warning" id="lpUpcoming">0</div>
+            <div class="fw-bold small">Upcoming</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-dark fw-bold" onclick="loadLiveData()">
+          <i class="bi bi-arrow-clockwise"></i> REFRESH LIVE
+        </button>
+      </div>
+    </div>
+
+    <div id="lpSections"></div>
+  </section>
+</div>
+
+<script>
+const REFRESH_INTERVAL_MS = 30000;
+
+const FACILITY_GROUPS = [
+  { title:'DFK Classrooms', icon:'bi-door-open', prefix:'DFK' },
+  { title:'Library', icon:'bi-book', rooms:['CENTURY 21ST','LITERASI 1','LITERASI 2'] },
+  { title:'Sport Facility', icon:'bi-trophy', rooms:['BADMINTON COURT','FIELD','PINPONG','TAKRAW','VOLLEYBALL'] }
+];
+
+let bookingRecords = [];
+
+function showTab(tab){
+  const isRecords = tab === 'records';
+
+  document.getElementById('recordsPanel').classList.toggle('active', isRecords);
+  document.getElementById('livePanel').classList.toggle('active', !isRecords);
+  document.getElementById('btnRecords').classList.toggle('active', isRecords);
+  document.getElementById('btnLive').classList.toggle('active', !isRecords);
+
+  if(isRecords){
+    loadBookingRecords();
+  }else{
+    loadLiveData();
+  }
+}
+
+function escapeHtml(v){
+  return String(v ?? '').replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+function fmtTime(t){
+  return t ? String(t).slice(0,5) : '--:--';
+}
+
+function statusBadgeClass(status){
+  const s = String(status || '').toUpperCase().replace(/[\s-]/g,'_');
+  if(s === 'PENDING') return 'st-pending';
+  if(s === 'CHECKED_IN') return 'st-checked';
+  if(s === 'CANCELLED') return 'st-cancelled';
+  return 'st-other';
+}
+
+/* =========================
+   BOOKING RECORDS
+========================= */
+async function loadBookingRecords(){
+  const tbody = document.getElementById('bookingRecordRows');
+
+  if(typeof window.supabaseClient === 'undefined' || !window.supabaseClient){
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-records text-danger">Supabase client tidak tersedia.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '<tr><td colspan="8" class="empty-records">Loading booking records...</td></tr>';
+
+  const { data, error } = await window.supabaseClient
+    .from('bookings')
+    .select('id, booked_by, room_name, booking_date, start_time, end_time, subject, lecturer, status')
+    .order('booking_date', { ascending:false })
+    .order('start_time', { ascending:false });
+
+  if(error){
+    console.error('Gagal load booking records:', error);
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-records text-danger">${escapeHtml(error.message)}</td></tr>`;
+    return;
+  }
+
+  bookingRecords = data || [];
+  renderBookingRecords();
+}
+
+function renderBookingRecords(){
+  const tbody = document.getElementById('bookingRecordRows');
+  const q = document.getElementById('recordSearch').value.trim().toLowerCase();
+  const status = document.getElementById('recordStatus').value.trim().toUpperCase();
+  const date = document.getElementById('recordDate').value;
+
+  const filtered = bookingRecords.filter(b => {
+    const normalizedStatus = String(b.status || '').toUpperCase().replace(/[\s-]/g,'_');
+    const hay = [
+      b.id,b.booked_by,b.room_name,b.booking_date,b.subject,b.lecturer,b.status
+    ].map(v => String(v ?? '')).join(' ').toLowerCase();
+
+    return (!q || hay.includes(q))
+      && (!status || normalizedStatus === status)
+      && (!date || b.booking_date === date);
+  });
+
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-records">Tiada booking dijumpai.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(b => `
+    <tr>
+      <td><b>${escapeHtml(b.id)}</b></td>
+      <td>${escapeHtml(b.booked_by || '-')}</td>
+      <td>${escapeHtml(b.room_name || '-')}</td>
+      <td>${escapeHtml(b.booking_date || '-')}</td>
+      <td>${escapeHtml(fmtTime(b.start_time))} - ${escapeHtml(fmtTime(b.end_time))}</td>
+      <td>${escapeHtml(b.subject || '-')}</td>
+      <td>${escapeHtml(b.lecturer || '-')}</td>
+      <td>
+        <span class="status-badge ${statusBadgeClass(b.status)}">
+          ${escapeHtml(b.status || '-')}
+        </span>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* =========================
+   LIVE CLOCK
+========================= */
+function nowInMalaysia(){
+  return new Date(new Date().toLocaleString('en-US', { timeZone:'Asia/Kuala_Lumpur' }));
+}
+function todayDateStringMY(){
+  const now = nowInMalaysia();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function updateClock(){
+  const now = nowInMalaysia();
+  document.getElementById('lpClock').textContent = now.toLocaleTimeString('en-GB');
+  document.getElementById('lpDate').textContent = now.toLocaleDateString('en-GB',{
+    weekday:'long',day:'2-digit',month:'long',year:'numeric'
+  }).toUpperCase();
+}
+function timeStringToDate(dateStr,timeStr){
+  const [y,mo,da] = (dateStr || todayDateStringMY()).split('-').map(Number);
+  const [h,m,s] = (timeStr || '00:00:00').split(':').map(Number);
+  return new Date(y,mo-1,da,h,m,s||0,0);
+}
+function isCheckedIn(status){
+  return (status || '').toLowerCase().replace(/[\s_]/g,'-') === 'checked-in';
+}
+function isPending(status){
+  return (status || '').toLowerCase() === 'pending';
+}
+
+/* =========================
+   LIVE ROOM STATUS
+========================= */
+async function loadLiveData(){
+  const container = document.getElementById('lpSections');
+
+  if(typeof window.supabaseClient === 'undefined' || !window.supabaseClient){
+    container.innerHTML = '<p class="text-white text-center">Supabase client tidak tersedia.</p>';
+    return;
+  }
+
+  const today = todayDateStringMY();
+
+  const [{ data:classrooms, error:crErr }, { data:bookings, error:bkErr }] = await Promise.all([
+    window.supabaseClient
+      .from('classrooms')
+      .select('room_name, status, page_url'),
+    window.supabaseClient
+      .from('bookings')
+      .select('room_name, booking_date, start_time, end_time, status, subject, lecturer, booked_by')
+      .gte('booking_date', today)
+      .order('booking_date', { ascending:true })
+      .order('start_time', { ascending:true })
+  ]);
+
+  if(crErr){
+    console.error('Gagal load classrooms:',crErr);
+    container.innerHTML = '<p class="text-white text-center">Ralat memuatkan data bilik.</p>';
+    return;
+  }
+  if(bkErr){
+    console.error('Gagal load bookings:',bkErr);
+  }
+
+  const bookingList = bookings || [];
+  const now = nowInMalaysia();
+  const roomStates = {};
+  let countOngoing = 0, countAvailable = 0, countUpcoming = 0;
+
+  (classrooms || []).forEach(c => {
+    const roomBookings = bookingList
+      .filter(b => b.room_name === c.room_name && (isPending(b.status) || isCheckedIn(b.status)))
+      .map(b => ({
+        ...b,
+        startDate:timeStringToDate(b.booking_date,b.start_time),
+        endDate:timeStringToDate(b.booking_date,b.end_time)
+      }));
+
+    let current = roomBookings.find(b =>
+      isCheckedIn(b.status) && now >= b.startDate && now < b.endDate
+    );
+
+    if(!current){
+      current = roomBookings.find(b =>
+        isPending(b.status) && now >= b.startDate && now < b.endDate
+      );
+    }
+
+    const next = roomBookings
+      .filter(b => b.startDate > now)
+      .sort((a,b) => a.startDate - b.startDate)[0];
+
+    let statusTag = 'available';
+
+    if(current){
+      statusTag = 'ongoing';
+      countOngoing++;
+    }else if(next){
+      statusTag = 'upcoming';
+      countUpcoming++;
+    }else{
+      countAvailable++;
+    }
+
+    roomStates[c.room_name] = { classroom:c,current,next,statusTag };
+  });
+
+  document.getElementById('lpOngoing').textContent = countOngoing;
+  document.getElementById('lpAvailable').textContent = countAvailable;
+  document.getElementById('lpUpcoming').textContent = countUpcoming;
+
+  let html = '';
+
+  FACILITY_GROUPS.forEach(group => {
+    const groupRooms = (classrooms || []).filter(c =>
+      group.prefix ? c.room_name.startsWith(group.prefix) : group.rooms.includes(c.room_name)
+    );
+
+    if(!groupRooms.length) return;
+
+    html += `<div class="mb-3 mt-4">
+      <span class="lp-section-title">
+        <i class="bi ${group.icon} me-2"></i>${group.title}
+      </span>
+    </div>`;
+    html += '<div class="row g-4 mb-4">';
+
+    groupRooms.forEach(c => {
+      html += renderRoomCard(c,roomStates[c.room_name]);
+    });
+
+    html += '</div>';
+  });
+
+  container.innerHTML = html || '<p class="text-white text-center">Tiada kemudahan dijumpai.</p>';
+}
+
+function renderRoomCard(classroom,state){
+  if(!state) return '';
+
+  const tag = state.statusTag;
+  let pillColor='#28a745',pillIcon='bi-check-circle-fill',pillText='AVAILABLE';
+
+  if(tag === 'ongoing'){
+    pillColor='#dc3545';pillIcon='bi-record-circle-fill';pillText='ONGOING';
+  }
+  if(tag === 'upcoming'){
+    pillColor='#ffc107';pillIcon='bi-hourglass-split';pillText='UPCOMING';
+  }
+
+  const current = state.current;
+  const next = state.next;
+
+  const currentHtml = current
+    ? `<span class="val">${escapeHtml(current.subject || '-')} &middot; ${escapeHtml(current.lecturer || current.booked_by || '-')}<br>${fmtTime(current.start_time)} - ${fmtTime(current.end_time)}</span>`
+    : '<span class="val text-muted">NO RECORD</span>';
+
+  const nextHtml = next
+    ? `<span class="val">${escapeHtml(next.subject || '-')} &middot; ${escapeHtml(next.lecturer || next.booked_by || '-')}<br>${fmtTime(next.start_time)} - ${fmtTime(next.end_time)}</span>`
+    : '<span class="val text-muted">NO RECORD</span>';
+
+  return `
+  <div class="col-md-6 col-lg-4">
+    <div class="lp-room-card h-100">
+      <div class="room-head">
+        <h4>
+          <i class="bi bi-door-closed me-1"></i>${escapeHtml(classroom.room_name)}
+          <br>
+          <small class="text-muted fw-normal">${escapeHtml(classroom.status || 'Available')}</small>
+        </h4>
+      </div>
+
+      <div class="p-3 pb-0">
+        <span class="lp-status-pill" style="background:${pillColor};">
+          <i class="bi ${pillIcon}"></i> ${pillText}
+        </span>
+      </div>
+
+      <div class="lp-info-box">
+        <div class="label text-danger">Current Session</div>
+        ${currentHtml}
+      </div>
+
+      <div class="lp-info-box">
+        <div class="label text-primary">Next Session</div>
+        ${nextHtml}
+      </div>
+
+      <div class="lp-footer">
+        <span><i class="bi bi-circle-fill text-success" style="font-size:.6rem;"></i> Live</span>
+        <a href="${escapeHtml(getTimetableUrl(classroom))}">
+          View Timetable <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>`;
+}
+
+function getTimetableUrl(classroom){
+  const room = (classroom.room_name || '').toUpperCase();
+
+  if(room.startsWith('DFK')) return '../Dfk/BookingDfk.html';
+  if(['CENTURY 21ST','LITERASI 1','LITERASI 2'].includes(room)) return '../Library/BookingLibrary.html';
+  if(['BADMINTON COURT','FIELD','TABLE TENNIS','TAKRAW','VOLLEYBALL'].includes(room)) return '../SportFacility/BookingSF.html';
+
+  return classroom.page_url ? '../' + String(classroom.page_url).replace(/^USER_PAGE\//i,'') : '#';
+}
+
+document.getElementById('recordSearch').addEventListener('input',renderBookingRecords);
+document.getElementById('recordStatus').addEventListener('change',renderBookingRecords);
+document.getElementById('recordDate').addEventListener('change',renderBookingRecords);
+
+document.addEventListener('DOMContentLoaded', async () => {
+  updateClock();
+  setInterval(updateClock,1000);
+
+  await loadBookingRecords();
+  await loadLiveData();
+
+  setInterval(loadLiveData,REFRESH_INTERVAL_MS);
+});
+</script>
+
+</body>
+</html>

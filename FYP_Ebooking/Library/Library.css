@@ -1,0 +1,269 @@
+/* Shared design-system stubs */
+.font-bungee { font-family: 'Bungee', cursive; }
+.btn-roblox { border-radius: 0; box-shadow: 3px 3px 0 rgba(0,0,0,.3); }
+.navbar { background-color: #393B3D !important; }
+body { background: #e9ecf1; }
+
+/* booking.css — Roblox design language */
+:root {
+    --bk-blue: #00A2FF;
+    --bk-green: #00E223;
+    --bk-red: #E2231A;
+    --bk-yellow: #FFC800;
+    --bk-dark: #393B3D;
+}
+
+.navbar { 
+    background-color: #393B3D !important; 
+    border-bottom: 4px solid #00A2FF !important; /* GARISAN BIRU */
+}
+
+.bk-wrap { max-width: 1100px; margin: 0 auto; }
+
+/* ---------- Page header ---------- */
+.bk-header {
+    background: var(--bk-blue);
+    color: #fff;
+    padding: 20px 22px;
+    border: 5px solid var(--bk-dark);
+    box-shadow: 10px 10px 0 rgba(0,0,0,.5);
+    font-family: 'Bungee', cursive;
+    text-align: center;
+    margin-bottom: 26px;
+}
+.bk-header p { font-family: 'Poppins', sans-serif; opacity: .95; }
+
+/* ---------- Quota strip ---------- */
+.bk-quota {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 22px;
+}
+.bk-quota .q-item {
+    flex: 1; min-width: 150px;
+    background: #fff;
+    border: 4px solid var(--bk-dark);
+    box-shadow: 5px 5px 0 rgba(0,0,0,.35);
+    padding: 12px 14px;
+}
+.bk-quota .q-label {
+    font-family: 'Bungee', cursive; font-size: .68rem;
+    color: var(--bk-dark); letter-spacing: .5px; display: block;
+}
+.bk-quota .q-value { font-family: 'Bungee', cursive; font-size: 1.5rem; }
+.bk-quota .q-value.ok { color: var(--bk-green); }
+.bk-quota .q-value.warn { color: var(--bk-red); }
+.bk-quota .q-sub { font-size: .72rem; color: #666; }
+
+/* ---------- Filter bar ---------- */
+.bk-filters {
+    background: #fff;
+    border: 4px solid var(--bk-dark);
+    box-shadow: 6px 6px 0 rgba(0,0,0,.35);
+    padding: 16px;
+    margin-bottom: 26px;
+}
+.bk-input {
+    border: 3px solid var(--bk-dark) !important;
+    border-radius: 0 !important;
+    padding: 9px !important;
+    font-family: 'Poppins', sans-serif;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.15);
+    background: #fff;
+}
+.bk-input:focus {
+    border-color: var(--bk-blue) !important;
+    box-shadow: 0 0 0 4px rgba(0,162,255,.25) !important;
+    outline: none;
+}
+.bk-mini-label {
+    display: block; font-family: 'Bungee', cursive;
+    font-size: .66rem; color: var(--bk-dark);
+    margin-bottom: 5px; letter-spacing: .5px;
+}
+
+/* ---------- Facility grid ---------- */
+.bk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.bk-card {
+    background: #fff;
+    border: 4px solid var(--bk-dark);
+    box-shadow: 7px 7px 0 rgba(0,0,0,.4);
+    display: flex; flex-direction: column;
+    transition: transform .12s, box-shadow .12s;
+    overflow: hidden;
+}
+.bk-card:hover { transform: translate(-2px,-2px); box-shadow: 9px 9px 0 rgba(0,0,0,.45); }
+.bk-card .c-top {
+    padding: 8px 12px;
+    font-family: 'Bungee', cursive; font-size: .62rem;
+    color: #fff; letter-spacing: .5px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.c-top.type-lab { background: #7a4bd8; }
+.c-top.type-classroom { background: var(--bk-blue); }
+.c-top.type-hall { background: var(--bk-dark); }
+.c-top.type-equipment { background: #d87a2b; }
+.bk-card .c-body { padding: 14px; flex: 1; }
+.bk-card h3 { font-family: 'Bungee', cursive; font-size: 1rem; margin: 0 0 6px; }
+.bk-meta { font-size: .82rem; color: #444; margin-bottom: 4px; }
+.bk-meta i { color: var(--bk-dark); width: 18px; }
+.bk-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.bk-tag {
+    font-size: .68rem; background: #eef4fb; border: 2px solid var(--bk-dark);
+    padding: 2px 7px; font-family: 'Poppins', sans-serif;
+}
+.bk-status {
+    font-family: 'Bungee', cursive; font-size: .58rem;
+    padding: 3px 8px; border: 2px solid #fff;
+}
+.bk-status.available { background: var(--bk-green); color: #06340d; }
+.bk-status.maintenance { background: var(--bk-yellow); color: #4a3800; }
+.bk-status.disabled { background: var(--bk-red); color: #fff; }
+.bk-card .c-foot { padding: 12px 14px; border-top: 3px dashed #cfcfcf; }
+.bk-card .c-foot .btn { width: 100%; }
+
+.bk-empty {
+    grid-column: 1 / -1; text-align: center; padding: 40px;
+    font-family: 'Bungee', cursive; color: #888;
+}
+
+/* ---------- Booking modal ---------- */
+.bk-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    display: flex; align-items: flex-start; justify-content: center;
+    z-index: 10000; padding: 24px 16px; overflow-y: auto;
+}
+.bk-modal {
+    background: #fff; border: 5px solid var(--bk-dark);
+    box-shadow: 10px 10px 0 rgba(0,0,0,.5);
+    max-width: 620px; width: 100%;
+    font-family: 'Poppins', sans-serif;
+    margin: auto;
+}
+.bk-modal-head {
+    background: var(--bk-blue); color: #fff;
+    padding: 16px; border-bottom: 4px solid var(--bk-dark);
+    font-family: 'Bungee', cursive;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.bk-modal-head.success { background: var(--bk-green); }
+.bk-modal-head .x {
+    background: none; border: none; color: #fff; font-size: 1.4rem;
+    line-height: 1; cursor: pointer; padding: 0 4px;
+}
+.bk-modal-body { padding: 20px; }
+.bk-modal-foot {
+    display: flex; gap: 10px; justify-content: flex-end;
+    padding: 14px 20px; border-top: 3px solid var(--bk-dark); background: #f5f5f5;
+}
+
+/* ---------- Time-slot grid ---------- */
+.bk-slots {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px; margin-top: 6px;
+}
+.bk-slot {
+    text-align: center; padding: 9px 4px;
+    border: 3px solid var(--bk-dark);
+    box-shadow: 3px 3px 0 rgba(0,0,0,.2);
+    background: #fff; cursor: pointer;
+    font-family: 'Poppins', sans-serif; font-size: .82rem; font-weight: 700;
+    transition: .12s; user-select: none;
+}
+.bk-slot:hover:not(.booked) { transform: translate(-1px,-1px); }
+.bk-slot.selected { background: var(--bk-blue); color: #fff; border-color: var(--bk-dark); }
+.bk-slot.booked {
+    background: repeating-linear-gradient(45deg,#f8d7da,#f8d7da 6px,#f1c2c6 6px,#f1c2c6 12px);
+    color: #9a1c17; cursor: not-allowed; text-decoration: line-through;
+}
+.bk-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: .74rem; }
+.bk-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.bk-legend .dot { width: 14px; height: 14px; border: 2px solid var(--bk-dark); display: inline-block; }
+.dot.free { background: #fff; }
+.dot.sel { background: var(--bk-blue); }
+.dot.busy { background: #f1c2c6; }
+
+.bk-summary {
+    background: #eef4fb; border: 3px solid var(--bk-dark);
+    padding: 12px; margin-top: 16px; font-size: .86rem;
+}
+.bk-summary b { font-family: 'Bungee', cursive; font-size: .72rem; }
+
+.bk-icon-big { font-size: 3.5rem; color: var(--bk-green); }
+.bk-ref-badge {
+    font-family: 'Bungee', cursive; font-size: 1.3rem; color: var(--bk-dark);
+    background: var(--bk-yellow); border: 3px solid var(--bk-dark);
+    display: inline-block; padding: 6px 16px; margin: 10px 0;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.3);
+}
+
+/* ---------- My bookings ---------- */
+.bk-section-title {
+    font-family: 'Bungee', cursive; font-size: 1.1rem; color: var(--bk-dark);
+    border-bottom: 4px solid var(--bk-dark); padding-bottom: 6px; margin-bottom: 16px;
+}
+.bk-booking-row {
+    background: #fff; border: 3px solid var(--bk-dark);
+    box-shadow: 5px 5px 0 rgba(0,0,0,.3);
+    padding: 12px 14px; margin-bottom: 12px;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+}
+.bk-booking-row .b-ref { font-family: 'Bungee', cursive; font-size: .8rem; }
+.bk-pill {
+    font-family: 'Bungee', cursive; font-size: .58rem;
+    padding: 3px 9px; border: 2px solid var(--bk-dark);
+}
+.bk-pill.PENDING { background: var(--bk-yellow); }
+.bk-pill.APPROVED { background: var(--bk-green); color:#06340d; }
+.bk-pill.REJECTED { background: var(--bk-red); color:#fff; }
+
+@media (max-width: 575.98px) {
+    .bk-header { border-width: 4px; box-shadow: 6px 6px 0 rgba(0,0,0,.5); }
+    .bk-modal-foot { flex-direction: column-reverse; }
+    .bk-modal-foot .btn { width: 100%; }
+}
+
+/* 1. Paksa video penuh satu skrin */
+#myVideo {
+    position: fixed;   /* Melekat kat skrin */
+    right: 0;
+    bottom: 0;
+    min-width: 100%;   /* Lebar penuh */
+    min-height: 100%;  /* Tinggi penuh */
+    width: auto;
+    height: auto;
+    z-index: -100;     /* Letak paling belakang sekali */
+    object-fit: cover; /* Biar video tak penyek */
+}
+
+/* 2. Tambah overlay (PENTING!) */
+/* Tanpa ni, kalau video Isma terang sangat, Isma tak nampak card putih tu */
+.video-overlay {
+    position: fixed; /* Cover skrin penuh */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* Warna hitam 40% telus */
+    z-index: -99;      /* Depan sikit dari video tapi belakang dari card */
+}
+
+/* --- PAKSA POP-UP MODAL DUDUK DI ATAS LAPISAN GELAP --- */
+.modal {
+    z-index: 99999 !important; /* Paksa kad aduan duduk paling depan */
+}
+
+.modal-backdrop {
+    z-index: 99990 !important; /* Lapisan gelap duduk di belakang kad */
+}
+
+/* Pastikan kandungan modal ada latar belakang putih yang jelas */
+.modal-content {
+    background-color: #ffffff !important;
+    position: relative;
+    z-index: 100000 !important;
+}

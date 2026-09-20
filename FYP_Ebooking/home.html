@@ -2,479 +2,1079 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOME</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Link ke style_index.css dalam folder yang sama -->
-    <link rel="stylesheet" href="/USER_PAGE/style_index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style_index.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./auth-guard.js"></script>
+
+    <style>
+        :root {
+            --dash-dark: #25282b;
+            --dash-blue: #1687ff;
+            --dash-green: #179447;
+            --dash-yellow: #ffc107;
+            --dash-red: #dc3545;
+            --dash-border: #393B3D;
+        }
+
+        html, body {
+            min-height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto !important;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #myVideo {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -3;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at top left, rgba(0,162,255,.16), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(0,226,35,.10), transparent 30%),
+                rgba(4, 13, 28, .50);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .home-navbar {
+            background: rgba(37, 40, 43, .93);
+            border-bottom: 5px solid #00A2FF;
+            backdrop-filter: blur(10px);
+        }
+
+        .home-navbar .navbar-brand {
+            letter-spacing: .5px;
+        }
+
+        .home-shell {
+            min-height: calc(100vh - 88px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 12px 44px;
+        }
+
+        .dashboard-panel {
+            width: min(860px, 96vw);
+            background: rgba(255,255,255,.96);
+            border: 5px solid var(--dash-border);
+            border-radius: 22px;
+            padding: 34px;
+            box-shadow: 12px 14px 0 rgba(0,0,0,.40), 0 22px 55px rgba(0,0,0,.32);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 8px;
+            background: linear-gradient(90deg, #00A2FF, #00E223, #FFC800);
+        }
+
+        .welcome-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eef7ff;
+            color: #0d6efd;
+            border: 2px solid #b9dcff;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-weight: 700;
+            font-size: .78rem;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .welcome-title {
+            font-family: 'Bungee', cursive;
+            font-size: clamp(1.45rem, 3vw, 2.1rem);
+            color: #25282b;
+            margin-bottom: 18px;
+        }
+
+        .profile-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 26px;
+        }
+
+        /* BINGKAI AVATAR BERSIH (HIJAU/GRADIENT DIBUANG) */
+        .avatar-ring {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            padding: 0;
+            background: transparent;
+            box-shadow: 0 10px 25px rgba(0,0,0,.15);
+            transition: .25s ease;
+            position: relative;
+        }
+
+        .avatar-ring::after {
+            display: none; /* Buang titik hijau status */
+        }
+
+        .avatar-ring:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        .avatar-ring img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.593);
+            border: 4px solid var(--dash-border);
+            border-radius: 50%;
+        }
+
+        .quick-card {
+            height: 100%;
+            background: #fff;
+            border: 4px solid var(--dash-border);
+            border-radius: 18px;
+            padding: 22px 20px;
+            box-shadow: 6px 7px 0 rgba(57,59,61,.20);
+            cursor: pointer;
+            transition: transform .22s ease, box-shadow .22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 8px 12px 0 rgba(57,59,61,.24);
+        }
+
+        .quick-card::after {
+            content: "";
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            right: -32px;
+            bottom: -42px;
+            background: rgba(13,110,253,.07);
+        }
+
+        .quick-icon {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--dash-border);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+        }
+
+        .quick-card h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-weight: 700;
+            font-size: .86rem;
+        }
+
+        .status-student {
+            color: #14783b;
+            background: #e8f7ee;
+            border: 2px solid #bfe8ce;
+        }
+
+        .booking-action {
+            margin-top: 24px;
+            border: 4px solid var(--dash-border);
+            border-radius: 18px;
+            min-height: 76px;
+            background: linear-gradient(135deg, #158c45, #22b55f);
+            color: #fff;
+            font-family: 'Bungee', cursive;
+            font-size: clamp(1rem, 2vw, 1.45rem);
+            box-shadow: 7px 8px 0 rgba(57,59,61,.35);
+            transition: .22s ease;
+        }
+
+        .booking-action:hover {
+            transform: translateY(-4px);
+            box-shadow: 8px 12px 0 rgba(57,59,61,.42);
+            color: #fff;
+        }
+
+        #checkInBox.pending-active {
+            background: linear-gradient(135deg, #fff8dc, #fff1ba) !important;
+        }
+
+        @keyframes softPulse {
+            0%,100% { transform: scale(1); }
+            50% { transform: scale(1.015); }
+        }
+
+        .animate-pulse {
+            animation: softPulse 1.5s ease-in-out infinite;
+        }
+
+        .status-card {
+            border-left: 8px solid #13c768;
+        }
+
+        .checkin-card {
+            border-left: 8px solid #ff9d00;
+        }
+
+        .status-card .quick-icon {
+            background: #e9fff3;
+            color: #13a954 !important;
+        }
+
+        .checkin-card .quick-icon {
+            background: #fff4df;
+            color: #ff9500 !important;
+        }
+
+        .quote-box {
+            margin-top: 18px;
+            background: linear-gradient(135deg, #eaf7ff, #d7efff);
+            border: 2px solid #b5def6;
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-weight: 600;
+            color: #2f3a46;
+        }
+
+        .quote-box i {
+            color: #f4b400;
+            margin-right: 8px;
+        }
+
+        .profile-subline {
+            margin-top: 12px;
+            font-weight: 700;
+            font-size: .86rem;
+            color: #5f6c78;
+        }
+
+        .profile-subline .badge {
+            font-size: .75rem;
+            border: 2px solid #bcdfff;
+        }
+
+        /* Maintenance-report UI */
+        .mr-previews { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+        .mr-thumb { position:relative; width:90px; height:90px; border:3px solid #393B3D; overflow:hidden; }
+        .mr-thumb img { width:100%; height:100%; object-fit:cover; cursor:pointer; }
+        .mr-thumb button {
+            position:absolute; top:2px; right:2px; width:22px; height:22px;
+            border:2px solid #393B3D; background:#E2231A; color:white;
+            font-weight:bold; font-size:14px; line-height:1; cursor:pointer;
+            border-radius:50%; z-index:2;
+        }
+
+        #mrLightbox {
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,.85);
+            z-index:100001; align-items:center; justify-content:center; cursor:zoom-out;
+        }
+        #mrLightbox.open { display:flex; }
+        #mrLightbox img { max-width:90%; max-height:85%; border:5px solid white; box-shadow:0 0 30px rgba(0,0,0,.6); }
+        #mrLightboxClose {
+            position:absolute; top:20px; right:30px; background:#E2231A; border:3px solid white;
+            color:white; font-size:24px; font-family:'Bungee', cursive; cursor:pointer;
+            line-height:1; padding:8px 16px; display:flex; align-items:center; gap:8px;
+            box-shadow:3px 3px 0 rgba(0,0,0,.4);
+        }
+
+        #reportModal .modal-dialog {
+            display:flex; align-items:center; min-height:calc(100% - 1rem);
+            margin:.5rem auto; max-width:500px; width:95%;
+        }
+        #reportModal .modal-content { max-height:90vh; overflow-y:auto; width:100%; }
+
+        .mr-modal-backdrop {
+            position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:100010;
+            display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;
+        }
+        .mr-modal {
+            background:#fff; border:6px solid #393B3D; box-shadow:8px 8px 0 rgba(0,0,0,.5);
+            max-width:420px; width:100%; font-family:'Poppins', sans-serif; max-height:90vh; overflow-y:auto;
+        }
+        .mr-modal-head {
+            background:#2452db; color:white; padding:14px 18px; font-family:'Bungee', cursive;
+            text-transform:uppercase; font-size:15px;
+        }
+        .mr-modal-head.success { background:#198754; }
+        .mr-modal-body { padding:20px; text-align:center; font-family:'Poppins', sans-serif; }
+        .mr-modal-foot { display:flex; gap:10px; padding:16px 20px; border-top:3px solid #eee; }
+        .mr-modal-foot button { flex:1; }
+        .mr-icon { font-size:48px; color:#198754; margin-bottom:10px; }
+
+        @media (max-width: 768px) {
+            .dashboard-panel { padding: 26px 18px; border-radius: 18px; }
+            .home-shell { align-items: flex-start; padding-top: 22px; }
+            .avatar-ring { width: 116px; height: 116px; }
+            .quick-card { text-align: left; }
+            .quick-card .quick-icon { margin-bottom: 10px; }
+            .home-navbar .container { gap: 10px; }
+            .home-navbar .navbar-brand { font-size: .92rem; }
+        }
+
+        @media (max-width: 480px) {
+            .home-navbar .container { align-items:flex-start !important; }
+            .home-navbar .d-flex.gap-2 { gap:6px !important; }
+            .home-navbar .btn { font-size:.68rem; padding:.45rem .55rem; }
+            .dashboard-panel { width: 100%; }
+        }
+    </style>
 </head>
+
 <body>
-     <video autoplay muted loop id="myVideo" preload="auto">
-    <source src="mainBG.mp4" type="video/mp4">
-</video>
-   <nav class="navbar navbar-dark p-3 shadow">
-    <div class="container text-uppercase d-flex align-items-center">
-        
-        <!-- SEBELAH KIRI: Tajuk -->
-        <a class="navbar-brand font-bungee m-0 text-white" href="#">
-            <i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>HOME DASHBOARD</a>
+    <video autoplay muted loop id="myVideo" preload="auto">
+        <source src="mainBG.mp4" type="video/mp4">
+    </video>
 
-        <!-- SEBELAH KANAN: Bungkus DUA butang rapat-rapat -->
-        <div class="d-flex gap-2 ms-auto">
-            <button class="btn btn-primary font-bungee border-2 border-white" onclick="window.location.href='../index.html'">LOG OUT</button>
-            <button class="btn btn-danger btn-sm font-bungee border-2 border-white" data-bs-toggle="modal" data-bs-target="#reportModal">REPORT</button>
+    <nav class="navbar navbar-dark p-3 shadow home-navbar">
+        <div class="container text-uppercase d-flex align-items-center">
+            <a class="navbar-brand font-bungee m-0 text-white" href="#">
+                <i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>HOME DASHBOARD
+            </a>
+
+            <div class="d-flex gap-2 ms-auto">
+                <button class="btn btn-primary font-bungee border-2 border-white" onclick="authGuard.logout()">
+                    <i class="bi bi-box-arrow-right me-1"></i>LOG OUT
+                </button>
+                <button class="btn btn-danger btn-sm font-bungee border-2 border-white"
+                        data-bs-toggle="modal" data-bs-target="#reportModal">
+                    <i class="bi bi-tools me-1"></i>REPORT
+                </button>
+            </div>
         </div>
+    </nav>
 
-    </div>
-</nav>
+    <main class="home-shell">
+        <section class="dashboard-panel text-center">
+            <div class="welcome-kicker">
+                <i class="bi bi-stars"></i> MyTVETMARA E-Booking
+            </div>
 
-    <div class="container text-center">
-        <div class="roblox-card1 w-100 mt-0" style="max-width: 800px; margin: auto;">
-            <h1 class="font-bungee text-dark">WELCOME BACK, <span id="userDisp">PLAYER</span>!</h1>
-            <!-- ID userAvatar untuk avatar dinamik dari DiceBear [37] -->
-            <img id="userAvatar" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Isma" class="my-4" style="width: 150px; border: 5px solid var(--roblox-dark);">
-            
+            <h1 class="welcome-title">
+                WELCOME BACK, <span id="userDisp">PLAYER</span>!
+            </h1>
+
+            <div class="profile-wrap">
+                <div class="avatar-ring">
+                    <img id="userAvatar"
+                         src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Isma"
+                         alt="User Avatar">
+                </div>
+                <div class="profile-subline">
+                    <span class="badge rounded-pill text-primary bg-light">
+                        <i class="bi bi-controller me-1"></i> STUDENT
+                    </span>
+                </div>
+            </div>
+
             <div class="row g-3 text-uppercase">
                 <div class="col-md-6">
-                    <div class="btn-roblox card p-3 border-4 border-dark shadow" style="background: white; transition: 0.3s; cursor: pointer;" onclick="window.location.href='UserDetail.html'">
+                    <div class="quick-card status-card" onclick="window.location.href='UserDetail.html'">
+                        <div class="quick-icon text-primary">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
                         <h4 class="font-bungee">MY STATUS</h4>
-                        <p class="fw-bold text-success"><i class="bi bi-check-circle"></i> STUDENT </p>
+                        <span class="status-pill status-student">
+                            <i class="bi bi-check-circle-fill"></i> STUDENT
+                        </span>
                     </div>
                 </div>
 
-                <!-- PENDING CHECK-IN -->
                 <div class="col-md-6">
-                    <!-- DIKEMASKINI: Pautan asal yang sangat ringkas dan kemas tanpa nama subfolder bertindih [28, 35] -->
-                    <div class="btn-roblox card p-4 border-4 border-dark shadow" id="checkInBox" style="background: white; transition: 0.3s; cursor: pointer;" onclick="window.location.href='USER_PAGE/check_in.html'">
+                    <div class="quick-card checkin-card" id="checkInBox"
+                         onclick="window.location.href='check_in.html'">
+                        <div class="quick-icon" style="color:#ff8f00;">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
                         <h4 class="font-bungee">PENDING CHECK-IN</h4>
-                        <p class="fw-bold mb-0" id="checkInStatus" style="color: #ff8f00;">
-                            <i class="bi bi-exclamation-triangle-fill"></i> 1 ROOM WAITING
+                        <p class="fw-bold mb-0" id="checkInStatus" style="color:#ff8f00;">
+                            <i class="bi bi-hourglass-split"></i> CHECKING...
                         </p>
                     </div>
                 </div>
             </div>
-
-            <!-- DIKEMASKINI: Pautan asal yang sangat ringkas dan kemas tanpa nama subfolder bertindih [28, 35] -->
-            <button class="btn btn-roblox btn-success w-100 py-3 mt-4 fs-3 text-white" onclick="window.location.href='/USER_PAGE/selection_page.html'">
-                <i class="bi bi-calendar-check"></i> GO TO BOOKING SYSTEM
+            <button class="btn booking-action w-100 py-3"
+                    onclick="window.location.href='selection_page.html'">
+                <i class="bi bi-calendar-check me-2"></i>GO TO BOOKING SYSTEM
             </button>
-        </div>
-    </div>
 
-<!-- ================= POP-UP CARD ADUAN / REPORT ================= -->
-<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-5 border-dark rounded-0 shadow-lg">
-            
-            <!-- Header Modal -->
-            <div class="modal-header text-white border-0"  style="background-color: #2452db;">
-                <h5 class="modal-title font-bungee text-uppercase">
-                    <i class="bi bi-chat-left-dots-fill me-2"></i> MAINTENANCE REPORT</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="quote-box">
+                <i class="bi bi-lightbulb-fill"></i>
+                “Plan your space, make your ideas happen!” — MyTVETMARA e-Booking
             </div>
+        </section>
+    </main>
 
-            <!-- Body Modal (Borang) -->
-            <div class="modal-body text-uppercase">
-                <p class="small text-muted fw-bold mb-3">Sila nyatakan aduan kerosakan atau masalah anda di bawah:</p>
-
-                <!-- Kategori -->
-                <form id="mrForm" class="mr-body" novalidate>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="mr-label">Room</label>
-                         <input type="text" id="mrRoom" class="form-control border-2.5 border-dark py-2.5 height-100"">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="mr-label" for="mrCategory">Issue Category <span class="mr-req">*</span></label>
-                        <select id="mrCategory" class="form-select mr-input" required>
-                            <option value="">-- Select --</option>
-                            <option>Air Conditioner</option>
-                            <option>Projector</option>
-                            <option>Whiteboard</option>
-                            <option>Chair</option>
-                            <option>Table</option>
-                            <option>Lighting</option>
-                            <option>Electrical</option>
-                            <option>Internet</option>
-                            <option>Door / Lock</option>
-                            <option>Cleanliness</option>
-                            <option>Other</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="mr-label">Severity <span class="mr-req">*</span></label>
-                        <div class="mr-severity">
-                            <label class="mr-radio sev-low"><input type="radio" name="severity" value="Low" required> <span>LOW</span></label>
-                            <label class="mr-radio sev-med"><input type="radio" name="severity" value="Medium"> <span>MEDIUM</span></label>
-                            <label class="mr-radio sev-high"><input type="radio" name="severity" value="High"> <span>HIGH</span></label>
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                        <label class="mr-label" for="mrDesc">Description <span class="mr-req">*</span></label>
-                        <textarea id="mrDesc" class="form-control mr-input" rows="5" minlength="20" maxlength="1000" placeholder="Describe the issue in detail..." required></textarea>
-                        <small class="mr-hint"><span id="mrDescCount">0</span> / 1000 (minimum 20)</small>
-                    </div>
-
-                    <div class="col-12">
-                        <label class="mr-label">Upload Images <small class="text-muted">(JPG/PNG/JPEG, max 5 files, 10MB each)</small></label>
-                        <div class="mr-upload">
-                            <input type="file" id="myFileInput" style="display: none;" accept="image/*" multiple>
-                            <input type="file" id="mrFiles" accept="image/jpeg,image/png,image/jpg" multiple hidden>
-                           <button type="button" class="btn btn-roblox btn-primary" onclick="document.getElementById('myFileInput').click()">CHOOSE IMAGES</button>
-                            <div class="mr-previews" id="mrPreviews"></div>
-                        </div>
+    <!-- MAINTENANCE REPORT MODAL -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-5 border-dark rounded-0 shadow-lg">
+                <div class="modal-header text-white border-0" style="background-color:#2452db;">
+                    <h5 class="modal-title font-bungee text-uppercase">
+                        <i class="bi bi-chat-left-dots-fill me-2"></i> MAINTENANCE REPORT
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <p></p>
 
-                <div class="mr-actions">
-                    <button type="button" class="btn btn-roblox btn-light" id="mrCancel">CANCEL</button>
-                    <button type="submit" class="btn btn-roblox btn-success text-white" id="mrSubmit"><i class="bi bi-send-fill"></i> SUBMIT REPORT</button>
+                <div class="modal-body text-uppercase">
+                    <p class="small text-muted fw-bold mb-3">
+                        Please state your damage report or problem below:
+                    </p>
+
+                    <form id="mrForm" class="mr-body" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="mr-label">Room</label>
+                                <select id="mrRoom" class="form-select border-2 border-dark py-2" required>
+                                    <option value="">-- Select Room / Facility --</option>
+                                    <optgroup label="DFK Classrooms">
+                                        <option>CLASS SMARTROOM</option><option>DFK 2</option><option>DFK 3</option><option>DFK 4</option><option>DFK 5</option>
+                                        <option>DFK 6</option><option>DFK 7</option><option>DFK 8</option><option>DFK 9</option><option>DFK 10</option>
+                                    </optgroup>
+                                    <optgroup label="Library">
+                                        <option>CENTURY 21ST</option><option>LITERASI 1</option><option>LITERASI 2</option>
+                                    </optgroup>
+                                    <optgroup label="Sport Facility">
+                                        <option>BADMINTON COURT</option><option>FIELD</option><option>PINPONG</option><option>TAKRAW</option><option>VOLLEYBALL</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="mr-label" for="mrCategory">Issue Category <span class="mr-req">*</span></label>
+                                <select id="mrCategory" class="form-select mr-input" required>
+                                    <option value="">-- Select --</option>
+                                    <option>Air Conditioner</option>
+                                    <option>Projector</option>
+                                    <option>Whiteboard</option>
+                                    <option>Chair</option>
+                                    <option>Table</option>
+                                    <option>Lighting</option>
+                                    <option>Electrical</option>
+                                    <option>Internet</option>
+                                    <option>Door / Lock</option>
+                                    <option>Cleanliness</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="mr-label">Severity <span class="mr-req">*</span></label>
+                                <div class="mr-severity">
+                                    <label class="mr-radio sev-low"><input type="radio" name="severity" value="Low" required> <span>LOW</span></label>
+                                    <label class="mr-radio sev-med"><input type="radio" name="severity" value="Medium"> <span>MEDIUM</span></label>
+                                    <label class="mr-radio sev-high"><input type="radio" name="severity" value="High"> <span>HIGH</span></label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="mr-label" for="mrDesc">Description <span class="mr-req">*</span></label>
+                                <textarea id="mrDesc" class="form-control mr-input" rows="5"
+                                          minlength="20" maxlength="1000"
+                                          placeholder="Describe the issue in detail..." required></textarea>
+                                <small class="mr-hint"><span id="mrDescCount">0</span> / 1000 (minimum 20)</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="mr-label">
+                                    Upload Images
+                                    <small class="text-muted">(JPG/PNG/JPEG, max 5 files, 10MB each)</small>
+                                </label>
+                                <div class="mr-upload">
+                                    <input type="file" id="mrFiles" accept="image/jpeg,image/png,image/jpg" multiple hidden>
+                                    <button type="button" class="btn btn-roblox btn-primary" id="mrPickBtn">CHOOSE IMAGES</button>
+                                    <div class="mr-previews" id="mrPreviews"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mr-actions mt-3">
+                            <button type="button" class="btn btn-roblox btn-light" id="mrCancel" data-bs-dismiss="modal">CANCEL</button>
+                            <button type="submit" class="btn btn-roblox btn-success text-white" id="mrSubmit">
+                                <i class="bi bi-send-fill"></i> SUBMIT REPORT
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- 1. TAMBAH BARIS NI KAT SINI (Sangat Penting!) -->
+    <div id="mrLightbox">
+        <button id="mrLightboxClose" type="button" aria-label="Close Preview">
+            &times;
+            <span style="font-size:14px;font-family:'Poppins',sans-serif;vertical-align:middle;">CLOSE PREVIEW</span>
+        </button>
+        <img id="mrLightboxImg" src="" alt="Preview">
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- 2. Baru ikuti script Isma macam biasa -->
-   <script>
-    // ==========================================
-    // 1. SKRIP VIDEO BACKGROUND SMOOTH TRANSITION (BARU)
-    // ==========================================
-    const bgVideo = document.getElementById('myVideo');
-
-    if (bgVideo) {
-        // Dapatkan masa terakhir video dari halaman sebelum ini
-        const savedTime = localStorage.getItem('bgVideoTime');
-        if (savedTime) {
-            bgVideo.currentTime = parseFloat(savedTime);
+    <script>
+        if (typeof window.supabaseClient === 'undefined' && typeof supabaseClient !== 'undefined') {
+            window.supabaseClient = supabaseClient;
         }
 
-        // Bila video sedia dimainkan, munculkan secara 'Smooth'
-        bgVideo.addEventListener('loadeddata', function() {
-            bgVideo.classList.add('loaded');
-        });
+        const STATUS_PENDING = 'PENDING';
 
-        // Jika video telah 'cached' dalam browser
-        if (bgVideo.readyState >= 3) {
-            bgVideo.classList.add('loaded');
-        }
+        const bgVideo = document.getElementById('myVideo');
 
-        // Simpan masa video secara berkala sebelum pengguna tukar page
-        setInterval(() => {
-            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
-        }, 500);
+        if (bgVideo) {
+            const savedTime = localStorage.getItem('bgVideoTime');
+            if (savedTime) bgVideo.currentTime = parseFloat(savedTime);
 
-        // Simpan masa tepat sejurus sebelum halaman ditukar
-        window.addEventListener('beforeunload', () => {
-            localStorage.setItem('bgVideoTime', bgVideo.currentTime);
-        });
-    }
+            bgVideo.addEventListener('loadeddata', function () {
+                bgVideo.classList.add('loaded');
+            });
 
-    // ==========================================
-    // 2. SKRIP PROFIL USER & CHECK-IN STATUS (ASAL)
-    // ==========================================
-    const username = localStorage.getItem('currentUser') || 'USER';
-    document.getElementById('userDisp').innerText = username;
-    
-    document.getElementById('userAvatar').src = 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + username;
+            if (bgVideo.readyState >= 3) bgVideo.classList.add('loaded');
 
-    const hasPendingBooking = true; 
-    const statusElement = document.getElementById('checkInStatus');
-    const boxElement = document.getElementById('checkInBox');
+            setInterval(() => {
+                localStorage.setItem('bgVideoTime', bgVideo.currentTime);
+            }, 500);
 
-    if (hasPendingBooking) {
-        statusElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> DFK 1 WAITING';
-        boxElement.style.backgroundColor = "#fff3cd"; 
-        boxElement.classList.add('animate-pulse');
-    } else {
-        statusElement.innerHTML = '<i class="bi bi-check-circle-fill"></i> NO PENDING';
-        statusElement.style.color = "#198754"; 
-        boxElement.style.backgroundColor = "white";
-    }
-
-    function sendReport() {
-        const category = document.getElementById('reportCategory').value;
-        const message = document.getElementById('reportMessage').value;
-
-        if (!category || !message) {
-            alert("SILA ISI KATEGORI DAN MESEJ ADUAN!");
-            return;
-        }
-
-        alert("ADUAN BERJAYA DIHANTAR! Admin akan menyemak aduan anda.");
-
-        document.getElementById('reportCategory').value = "";
-        document.getElementById('reportMessage').value = "";
-
-        const modalEl = document.getElementById('reportModal');
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) {
-            modalInstance.hide();
-        }
-    }
-
-    // ==========================================
-    // 3. SKRIP MAINTENANCE REPORT FORM (ASAL)
-    // ==========================================
-    (function () {
-        'use strict';
-
-        const MAX_FILES = 5;
-        const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-        const ALLOWED = ['image/jpeg', 'image/png', 'image/jpg'];
-        const LAST_SUBMIT_KEY = 'mr_last_submit_ts';
-
-        const $ = (id) => document.getElementById(id);
-        let selectedFiles = [];
-
-        function autofill() {
-            const name = localStorage.getItem('currentUser') || 'Player One';
-            const sid = localStorage.getItem('currentStudentId') || 'S00000';
-            const ref = localStorage.getItem('currentBookingRef') || ('BK-' + Date.now().toString().slice(-6));
-            const room = localStorage.getItem('currentRoom') || 'N/A';
-
-            if ($('mrName')) $('mrName').value = name;
-            if ($('mrSid')) $('mrSid').value = sid;
-            if ($('mrRef')) $('mrRef').value = ref;
-            if ($('mrRoom')) $('mrRoom').value = room;
-            if ($('mrTime')) $('mrTime').value = new Date().toLocaleString();
-        }
-
-        function wireSeverity() {
-            document.querySelectorAll('.mr-radio').forEach(label => {
-                label.addEventListener('click', () => {
-                    document.querySelectorAll('.mr-radio').forEach(l => l.classList.remove('selected'));
-                    label.classList.add('selected');
-                    const input = label.querySelector('input');
-                    if (input) input.checked = true;
-                });
+            window.addEventListener('beforeunload', () => {
+                localStorage.setItem('bgVideoTime', bgVideo.currentTime);
             });
         }
 
-        function wireDesc() {
-            const desc = $('mrDesc');
-            const count = $('mrDescCount');
-            if (desc && count) {
-                desc.addEventListener('input', () => count.textContent = desc.value.length);
+        let currentIdentity = {
+            userId: '',
+            username: 'USER',
+            studentId: ''
+        };
+
+        // FUNGSI MEMUATKAN DATA USER & GAMBAR PROFIL
+        async function loadCurrentIdentity() {
+            let savedData = {};
+            try {
+                savedData = JSON.parse(localStorage.getItem('userAccount')) || {};
+            } catch (e) {}
+
+            function setAvatar(url, name) {
+                const avatarImg = document.getElementById('userAvatar');
+                if (!avatarImg) return;
+                
+                if (url) {
+                    avatarImg.src = url;
+                } else {
+                    avatarImg.src = 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + encodeURIComponent(name || 'PLAYER');
+                }
+            }
+
+            // 1. Papar terus daripada storan jika sudah ada
+            if (savedData.customAvatar) {
+                setAvatar(savedData.customAvatar, savedData.fullname || savedData.username);
+            }
+
+            // 2. Tarik terus dari Supabase Auth
+            if (window.supabaseClient) {
+                try {
+                    const { data, error } = await window.supabaseClient.auth.getUser();
+
+                    if (!error && data && data.user) {
+                        const user = data.user;
+                        const meta = user.user_metadata || {};
+
+                        currentIdentity = {
+                            userId: user.id || '',
+                            username:
+                                meta.fullname ||
+                                meta.full_name ||
+                                meta.display_name ||
+                                meta.username ||
+                                user.email ||
+                                'USER',
+                            studentId:
+                                meta.student_id ||
+                                meta.studentId ||
+                                meta.ic ||
+                                meta.ic_number ||
+                                user.id ||
+                                ''
+                        };
+
+                        if (meta.custom_avatar) {
+                            savedData.customAvatar = meta.custom_avatar;
+                            localStorage.setItem('userAccount', JSON.stringify(savedData));
+                            setAvatar(meta.custom_avatar, currentIdentity.username);
+                        } else if (!savedData.customAvatar) {
+                            setAvatar(null, currentIdentity.username);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Ralat auth getUser:', e);
+                }
+            }
+
+            if (!currentIdentity.username || currentIdentity.username === 'USER') {
+                currentIdentity.username = savedData.fullname || savedData.username || 'PLAYER';
+            }
+
+            const userDispEl = document.getElementById('userDisp');
+            if (userDispEl) userDispEl.innerText = currentIdentity.username;
+
+            // 3. Kunci semula selepas 300ms untuk kekalkan gambar profil
+            setTimeout(() => {
+                if (savedData.customAvatar) {
+                    setAvatar(savedData.customAvatar, currentIdentity.username);
+                }
+            }, 300);
+
+            return currentIdentity;
+        }
+
+        async function updateCheckInStatus() {
+            const statusElement = document.getElementById('checkInStatus');
+            const boxElement = document.getElementById('checkInBox');
+            const identity = await loadCurrentIdentity();
+
+            function showNoPending() {
+                if (!statusElement) return;
+                statusElement.innerHTML = '<i class="bi bi-check-circle-fill"></i> NO PENDING';
+                statusElement.style.color = '#198754';
+                if (boxElement) boxElement.classList.remove('animate-pulse', 'pending-active');
+            }
+
+            if (!window.supabaseClient || !identity.username) {
+                showNoPending();
+                return;
+            }
+
+            const { data, error } = await window.supabaseClient
+                .from('bookings')
+                .select('id')
+                .eq('booked_by', identity.username)
+                .eq('status', STATUS_PENDING);
+
+            if (error) {
+                console.error('Gagal fetch status booking:', error);
+                showNoPending();
+                return;
+            }
+
+            if (data && data.length > 0) {
+                statusElement.innerHTML =
+                    `<i class="bi bi-exclamation-triangle-fill"></i> ${data.length} ROOM WAITING`;
+                statusElement.style.color = '#ff8f00';
+                if (boxElement) boxElement.classList.add('animate-pulse', 'pending-active');
+            } else {
+                showNoPending();
             }
         }
 
-        function wireFiles() {
-            const input = $('mrFiles');
-            const pickBtn = $('mrPickBtn');
-            if (pickBtn && input) {
+        (function () {
+            'use strict';
+
+            const MAX_FILES = 5;
+            const MAX_SIZE = 10 * 1024 * 1024;
+            const ALLOWED = ['image/jpeg', 'image/png', 'image/jpg'];
+            const LAST_SUBMIT_KEY = 'mr_last_submit_ts';
+
+            const $ = id => document.getElementById(id);
+            let selectedFiles = [];
+
+            async function autofill() {
+                const identity = await loadCurrentIdentity();
+                let booking = null;
+
+                if (window.supabaseClient && identity.username) {
+                    const { data, error } = await window.supabaseClient
+                        .from('bookings')
+                        .select('id, room_name, booking_date, start_time, end_time, status, booked_by')
+                        .eq('booked_by', identity.username)
+                        .in('status', ['PENDING', 'CHECKED_IN'])
+                        .gte('booking_date', new Date().toISOString().slice(0, 10))
+                        .order('booking_date', { ascending: true })
+                        .order('start_time', { ascending: true })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (!error) booking = data;
+                }
+
+                if ($('mrRoom')) $('mrRoom').value = booking?.room_name || '';
+
+                if ($('mrForm')) {
+                    $('mrForm').dataset.bookingId = booking?.id ? String(booking.id) : '';
+                }
+            }
+
+            function wireSeverity() {
+                document.querySelectorAll('.mr-radio').forEach(label => {
+                    label.addEventListener('click', () => {
+                        document.querySelectorAll('.mr-radio').forEach(l => l.classList.remove('selected'));
+                        label.classList.add('selected');
+                        const input = label.querySelector('input');
+                        if (input) input.checked = true;
+                    });
+                });
+            }
+
+            function wireDesc() {
+                const desc = $('mrDesc');
+                const count = $('mrDescCount');
+
+                if (desc && count) {
+                    desc.addEventListener('input', () => {
+                        count.textContent = desc.value.length;
+                    });
+                }
+            }
+
+            function wireFiles() {
+                const input = $('mrFiles');
+                const pickBtn = $('mrPickBtn');
+
+                if (!pickBtn || !input) return;
+
                 pickBtn.addEventListener('click', () => input.click());
-                input.addEventListener('change', (e) => {
+
+                input.addEventListener('change', e => {
                     const files = Array.from(e.target.files || []);
+
                     for (const f of files) {
-                        if (selectedFiles.length >= MAX_FILES) { alert('Maximum ' + MAX_FILES + ' images.'); break; }
-                        if (!ALLOWED.includes(f.type)) { alert('Only JPG/PNG allowed: ' + f.name); continue; }
-                        if (f.size > MAX_SIZE) { alert('Max 10MB: ' + f.name); continue; }
+                        if (selectedFiles.length >= MAX_FILES) {
+                            alert('Maximum ' + MAX_FILES + ' images.');
+                            break;
+                        }
+                        if (!ALLOWED.includes(f.type)) {
+                            alert('Only JPG/PNG allowed: ' + f.name);
+                            continue;
+                        }
+                        if (f.size > MAX_SIZE) {
+                            alert('Max 10MB: ' + f.name);
+                            continue;
+                        }
                         selectedFiles.push(f);
                     }
+
                     input.value = '';
                     renderPreviews();
                 });
             }
-        }
 
-        function renderPreviews() {
-            const wrap = $('mrPreviews');
-            if (!wrap) return;
-            wrap.innerHTML = '';
-            selectedFiles.forEach((f, i) => {
-                const url = URL.createObjectURL(f);
-                const div = document.createElement('div');
-                div.className = 'mr-thumb';
-                div.innerHTML = `<img src="${url}" alt=""><button type="button" aria-label="Remove">×</button>`;
-                div.querySelector('button').onclick = () => {
-                    selectedFiles.splice(i, 1);
-                    renderPreviews();
-                };
-                wrap.appendChild(div);
-            });
-        }
+            function openLightbox(url) {
+                const lb = $('mrLightbox');
+                const img = $('mrLightboxImg');
+                if (!lb || !img) return;
+                img.src = url;
+                lb.classList.add('open');
+            }
 
-        function modal({ title, body, buttons, success }) {
-            const back = document.createElement('div');
-            back.className = 'mr-modal-backdrop';
-            back.innerHTML = `
-                <div class="mr-modal" role="dialog" aria-modal="true">
-                    <div class="mr-modal-head ${success ? 'success' : ''}">${title}</div>
-                    <div class="mr-modal-body">${body}</div>
-                    <div class="mr-modal-foot"></div>
-                </div>`;
-            const foot = back.querySelector('.mr-modal-foot');
-            buttons.forEach(b => {
-                const btn = document.createElement('button');
-                btn.className = 'btn btn-roblox ' + (b.variant || 'btn-light');
-                if (b.variant && b.variant.includes('success')) btn.classList.add('text-white');
-                btn.textContent = b.label;
-                btn.onclick = () => { b.onClick && b.onClick(); back.remove(); };
-                foot.appendChild(btn);
-            });
-            const onKey = (e) => { if (e.key === 'Escape') { back.remove(); document.removeEventListener('keydown', onKey); } };
-            document.addEventListener('keydown', onKey);
-            document.body.appendChild(back);
-            return back;
-        }
+            function closeLightbox() {
+                $('mrLightbox')?.classList.remove('open');
+            }
 
-        function validate() {
-            const errors = [];
-            if (!$('mrCategory') || !$('mrCategory').value) errors.push('Select an issue category.');
-            if (!document.querySelector('input[name="severity"]:checked')) errors.push('Select severity.');
-            const desc = $('mrDesc') ? $('mrDesc').value.trim() : '';
-            if (desc.length < 20) errors.push('Description must be at least 20 characters.');
-            return errors;
-        }
+            function wireLightbox() {
+                const lb = $('mrLightbox');
+                const closeBtn = $('mrLightboxClose');
 
-        async function uploadImages(refId) {
-            if (typeof window.supabaseClient === 'undefined' || !selectedFiles.length) return [];
-            const urls = [];
-            for (const f of selectedFiles) {
-                const path = `${refId}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-                try {
-                    const { error } = await window.supabaseClient.storage
-                        .from('maintenance-images').upload(path, f);
-                    if (!error) {
-                        const { data } = window.supabaseClient.storage
-                            .from('maintenance-images').getPublicUrl(path);
-                        urls.push(data.publicUrl);
+                closeBtn?.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeLightbox();
+                });
+
+                lb?.addEventListener('click', e => {
+                    if (e.target.id === 'mrLightbox') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeLightbox();
                     }
-                } catch (e) { console.warn('Upload failed', e); }
-            }
-            return urls;
-        }
+                });
 
-        async function submitReport() {
-            const refId = $('mrRef') ? $('mrRef').value : 'BK-000';
-            const payload = {
-                reference_id: refId,
-                booking_id: refId,
-                student_id: $('mrSid') ? $('mrSid').value : '',
-                student_name: $('mrName') ? $('mrName').value : '',
-                room: $('mrRoom') ? $('mrRoom').value : '',
-                category: $('mrCategory') ? $('mrCategory').value : '',
-                severity: document.querySelector('input[name="severity"]:checked') ? document.querySelector('input[name="severity"]:checked').value : 'Low',
-                description: $('mrDesc') ? $('mrDesc').value.trim() : '',
-                image_urls: [],
-                report_time: new Date().toISOString(),
-                status: 'Pending',
-                admin_note: null
-            };
-
-            try {
-                payload.image_urls = await uploadImages(refId);
-                if (typeof window.supabaseClient !== 'undefined') {
-                    await window.supabaseClient.from('maintenance_reports').insert(payload);
-                } else {
-                    console.info('[MR] Supabase not initialised — payload:', payload);
-                }
-            } catch (e) {
-                console.error('Submit error', e);
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape' && lb?.classList.contains('open')) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        closeLightbox();
+                    }
+                }, true);
             }
 
-            localStorage.setItem(LAST_SUBMIT_KEY, Date.now().toString());
-            showSuccess();
-        }
+            function renderPreviews() {
+                const wrap = $('mrPreviews');
+                if (!wrap) return;
 
-        function showSuccess() {
-            modal({
-                success: true,
-                title: 'REPORT SUBMITTED',
-                body: `<div class="mr-icon"><i class="bi bi-check-circle-fill"></i></div>
-                       <h5 class="font-bungee mb-2">Report Submitted Successfully</h5>
-                       <p class="mb-0 small">Thank you. Your maintenance report has been sent to the administrator.</p>`,
-                buttons: [
-                    { label: 'OK', variant: 'btn-success', onClick: () => alert('DEMO: redirect to ../home.html') }
-                ]
-            });
-        }
+                wrap.innerHTML = '';
 
-        function confirmSubmit() {
-            modal({
-                title: 'SUBMIT MAINTENANCE REPORT?',
-                body: `<p class="mb-0">Are you sure you want to submit this maintenance report?<br><small class="text-muted">You cannot edit it after submission.</small></p>`,
-                buttons: [
-                    { label: 'CANCEL', variant: 'btn-light' },
-                    { label: 'SUBMIT', variant: 'btn-success', onClick: submitReport }
-                ]
-            });
-        }
+                selectedFiles.forEach((f, i) => {
+                    const url = URL.createObjectURL(f);
+                    const div = document.createElement('div');
+                    div.className = 'mr-thumb';
+                    div.innerHTML = `<img src="${url}" alt=""><button type="button">×</button>`;
 
-        function wireForm() {
-            if ($('mrCancel')) {
-                $('mrCancel').addEventListener('click', () => {
-                    if (confirm('Discard this report?')) alert('DEMO: redirect to ../home.html');
+                    div.querySelector('img').onclick = () => openLightbox(url);
+                    div.querySelector('button').onclick = e => {
+                        e.stopPropagation();
+                        selectedFiles.splice(i, 1);
+                        renderPreviews();
+                    };
+
+                    wrap.appendChild(div);
                 });
             }
 
-            if ($('mrForm')) {
-                $('mrForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const errs = validate();
-                    if (errs.length) { alert(errs.join('\n')); return; }
+            function modal({ title, body, buttons, success }) {
+                const back = document.createElement('div');
+                back.className = 'mr-modal-backdrop';
 
-                    const last = parseInt(localStorage.getItem(LAST_SUBMIT_KEY) || '0', 10);
+                back.innerHTML = `
+                    <div class="mr-modal" role="dialog" aria-modal="true">
+                        <div class="mr-modal-head ${success ? 'success' : ''}">${title}</div>
+                        <div class="mr-modal-body">${body}</div>
+                        <div class="mr-modal-foot"></div>
+                    </div>`;
+
+                const foot = back.querySelector('.mr-modal-foot');
+
+                buttons.forEach(b => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-roblox ' + (b.variant || 'btn-light');
+                    if (b.variant?.includes('success')) btn.classList.add('text-white');
+                    btn.textContent = b.label;
+                    btn.onclick = () => {
+                        b.onClick?.();
+                        back.remove();
+                    };
+                    foot.appendChild(btn);
+                });
+
+                document.body.appendChild(back);
+                return back;
+            }
+
+            function validate() {
+                const errors = [];
+
+                if (!$('mrRoom')?.value.trim()) errors.push('Please select a room / facility.');
+                if (!$('mrCategory')?.value) errors.push('Select an issue category.');
+                if (!document.querySelector('input[name="severity"]:checked')) errors.push('Select severity.');
+
+                const desc = $('mrDesc')?.value.trim() || '';
+                if (desc.length < 20) errors.push('Description must be at least 20 characters.');
+
+                return errors;
+            }
+
+            async function uploadImages(refId) {
+                if (!window.supabaseClient || !selectedFiles.length) return [];
+
+                const urls = [];
+
+                for (const f of selectedFiles) {
+                    const path =
+                        `${refId}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+                    try {
+                        const { error } = await window.supabaseClient.storage
+                            .from('maintenance-images')
+                            .upload(path, f);
+
+                        if (!error) {
+                            const { data } = window.supabaseClient.storage
+                                .from('maintenance-images')
+                                .getPublicUrl(path);
+
+                            urls.push(data.publicUrl);
+                        }
+                    } catch (e) {
+                        console.warn('Upload failed', e);
+                    }
+                }
+
+                return urls;
+            }
+
+            async function submitReport() {
+                const refId = 'MR-' + Date.now().toString().slice(-6);
+                const linkedBookingId = $('mrForm')?.dataset.bookingId || null;
+                const identity = await loadCurrentIdentity();
+
+                const payload = {
+                    reference_id: refId,
+                    booking_id: linkedBookingId,
+                    student_id: identity.studentId || identity.userId || '',
+                    student_name: identity.username || 'USER',
+                    room: $('mrRoom')?.value || '',
+                    category: $('mrCategory')?.value || '',
+                    severity: document.querySelector('input[name="severity"]:checked')?.value || 'Low',
+                    description: $('mrDesc')?.value.trim() || '',
+                    image_urls: [],
+                    report_time: new Date().toISOString(),
+                    status: STATUS_PENDING,
+                    admin_note: null
+                };
+
+                try {
+                    payload.image_urls = await uploadImages(refId);
+
+                    if (window.supabaseClient) {
+                        const { error } = await window.supabaseClient
+                            .from('maintenance_reports')
+                            .insert(payload);
+
+                        if (error) throw error;
+                    }
+                } catch (e) {
+                    console.error('Submit error', e);
+                    alert('Report gagal dihantar: ' + (e.message || e));
+                    return;
+                }
+
+                localStorage.setItem(LAST_SUBMIT_KEY, Date.now().toString());
+                showSuccess();
+            }
+
+            function showSuccess() {
+                modal({
+                    success: true,
+                    title: 'REPORT SUBMITTED',
+                    body: `<div class="mr-icon"><i class="bi bi-check-circle-fill"></i></div>
+                           <h5 class="font-bungee mb-2">Report Submitted Successfully</h5>
+                           <p class="mb-0 small">Thank you. Your maintenance report has been sent to the administrator.</p>`,
+                    buttons: [{
+                        label: 'OK',
+                        variant: 'btn-success',
+                        onClick: () => {
+                            bootstrap.Modal.getInstance(
+                                document.getElementById('reportModal')
+                            )?.hide();
+                        }
+                    }]
+                });
+            }
+
+            function confirmSubmit() {
+                modal({
+                    title: 'SUBMIT MAINTENANCE REPORT?',
+                    body: `<p class="mb-0">Are you sure you want to submit this maintenance report?<br>
+                           <small class="text-muted">You cannot edit it after submission.</small></p>`,
+                    buttons: [
+                        { label: 'CANCEL', variant: 'btn-light' },
+                        { label: 'SUBMIT', variant: 'btn-success', onClick: submitReport }
+                    ]
+                });
+            }
+
+            function wireForm() {
+                $('mrCancel')?.addEventListener('click', e => {
+                    e.preventDefault();
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('reportModal')
+                    )?.hide();
+                });
+
+                $('mrForm')?.addEventListener('submit', e => {
+                    e.preventDefault();
+
+                    const errs = validate();
+
+                    if (errs.length) {
+                        alert(errs.join('\n'));
+                        return;
+                    }
+
+                    const last = parseInt(
+                        localStorage.getItem(LAST_SUBMIT_KEY) || '0',
+                        10
+                    );
+
                     if (last && Date.now() - last < 5 * 60 * 1000) {
                         alert('Please wait before submitting another report (5-minute cooldown).');
                         return;
                     }
+
                     confirmSubmit();
                 });
             }
-        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            autofill();
-            wireSeverity();
-            wireDesc();
-            wireFiles();
-            wireForm();
-            setInterval(() => { if ($('mrTime')) $('mrTime').value = new Date().toLocaleString(); }, 30000);
-        });
-    })();
+            document.addEventListener('DOMContentLoaded', async () => {
+                await loadCurrentIdentity();
+                await updateCheckInStatus();
+                await autofill();
 
-    // ==========================================
-    // 4. SKRIP FAQ CHATBOT LOADER (ASAL)
-    // ==========================================
-    (function () {
-        if (window.__faqChatbotLoaderBound) return;
-        window.__faqChatbotLoaderBound = true;
+                wireSeverity();
+                wireDesc();
+                wireFiles();
+                wireForm();
+                wireLightbox();
+            });
+        })();
 
-        var candidates = ['./faq-chatbot.js', '../faq-chatbot.js', '../../faq-chatbot.js', '../../../faq-chatbot.js'];
-        var index = 0;
+        (function () {
+            if (window.__faqChatbotLoaderBound) return;
+            window.__faqChatbotLoaderBound = true;
 
-        function tryLoad() {
-            if (index >= candidates.length) return;
-            var script = document.createElement('script');
-            script.src = candidates[index];
-            script.onload = function () {
-                if (window.__rbxFaqLoaded) {
-                    console.log('FAQ chatbot loaded');
-                }
-            };
-            script.onerror = function () {
-                index += 1;
-                tryLoad();
-            };
-            document.head.appendChild(script);
-        }
+            const candidates = [
+                './faq-chatbot.js',
+                '../faq-chatbot.js',
+                '../../faq-chatbot.js',
+                '../../../faq-chatbot.js'
+            ];
 
-        tryLoad();
-    })();
-</script>
-   
-</body>
-</html>
-   </script>
-   <!-- WAJIB ADA UNTUK POP-UP BOOTSTRAP BERFUNGSI -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-   
+            let index = 0;
+
+            function tryLoad() {
+                if (index >= candidates.length) return;
+
+                const script = document.createElement('script');
+                script.src = candidates[index];
+
+                script.onload = function () {
+                    if (window.__rbxFaqLoaded) {
+                        console.log('FAQ chatbot loaded');
+                    }
+                };
+
+                script.onerror = function () {
+                    index += 1;
+                    tryLoad();
+                };
+
+                document.head.appendChild(script);
+            }
+
+            tryLoad();
+        })();
+    </script>
 </body>
 </html>

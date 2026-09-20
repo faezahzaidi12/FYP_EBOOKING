@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAINTENANCE REPORTS | ADMIN</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth-guard.js"></script>
+
+<!-- PDF generator -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+  --dark:#393B3D;
+  --blue:#00A2FF;
+  --red:#E2231A;
+  --green:#198754;
+  --yellow:#FFC107;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:#eef1f4;
+  color:#25292d;
+  font-family:'Poppins',sans-serif;
+}
+.font-bungee{font-family:'Bungee',cursive}
+.navbar{
+  background:var(--dark)!important;
+  border-bottom:5px solid var(--blue);
+}
+.page-wrap{max-width:1250px;margin:0 auto;padding:30px 18px 60px}
+.hero{
+  background:#fff;
+  border:4px solid var(--dark);
+  box-shadow:8px 8px 0 rgba(0,0,0,.20);
+  padding:22px;
+  margin-bottom:25px;
+}
+.filter-box{
+  background:#fff;
+  border:3px solid var(--dark);
+  padding:16px;
+  margin-bottom:20px;
+}
+.report-table-wrap{
+  background:#fff;
+  border:4px solid var(--dark);
+  box-shadow:8px 8px 0 rgba(0,0,0,.16);
+  overflow:auto;
+}
+table{min-width:1000px;margin:0!important}
+thead th{
+  background:#212529!important;
+  color:#fff!important;
+  font-family:'Bungee',cursive;
+  font-size:.75rem;
+  white-space:nowrap;
+}
+tbody td{vertical-align:middle;font-size:.88rem}
+.badge-status,.badge-severity{
+  display:inline-block;
+  border:2px solid var(--dark);
+  padding:5px 9px;
+  font-weight:700;
+  font-size:.72rem;
+  text-transform:uppercase;
+}
+.status-pending{background:#fff3cd;color:#8a6500}
+.status-in-progress{background:#cfe2ff;color:#084298}
+.status-resolved{background:#d1e7dd;color:#0f5132}
+.sev-low{background:#d1e7dd;color:#0f5132}
+.sev-medium{background:#fff3cd;color:#664d03}
+.sev-high{background:#f8d7da;color:#842029}
+.action-btn{
+  border:2px solid var(--dark);
+  font-weight:700;
+  margin:2px;
+}
+.empty-state{padding:50px;text-align:center;color:#777}
+.modal-content{border:5px solid var(--dark);border-radius:0}
+.detail-label{font-size:.75rem;font-weight:700;text-transform:uppercase;color:#6c757d}
+.detail-value{font-weight:600;word-break:break-word}
+.image-grid{display:flex;flex-wrap:wrap;gap:10px}
+.image-grid img{
+  width:110px;height:110px;object-fit:cover;
+  border:3px solid var(--dark);cursor:pointer;
+}
+@media(max-width:768px){
+  .hero h1{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark p-3 shadow">
+  <div class="container-fluid px-3 px-md-5">
+    <span class="navbar-brand font-bungee mb-0">
+      <i class="bi bi-tools me-2"></i>MAINTENANCE REPORTS
+    </span>
+    <button class="btn btn-primary btn-sm font-bungee border-2 border-white"
+            onclick="window.location.href='home_admin.html'">
+      <i class="bi bi-arrow-left"></i> BACK
+    </button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="hero">
+    <h1 class="font-bungee mb-2">REPORT MANAGEMENT</h1>
+    <p class="mb-0 text-muted fw-bold">
+      View maintenance reports, update status, add admin notes, and export each report as PDF.
+    </p>
+  </div>
+
+  <div class="filter-box">
+    <div class="row g-2">
+      <div class="col-md-5">
+        <input id="searchInput" class="form-control border-2 border-dark"
+               placeholder="Search room, category, student, description...">
+      </div>
+      <div class="col-md-3">
+        <select id="statusFilter" class="form-select border-2 border-dark">
+          <option value="">ALL STATUS</option>
+          <option value="PENDING">PENDING</option>
+          <option value="IN PROGRESS">IN PROGRESS</option>
+          <option value="RESOLVED">RESOLVED</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select id="severityFilter" class="form-select border-2 border-dark">
+          <option value="">ALL SEVERITY</option>
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="HIGH">HIGH</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-dark fw-bold" onclick="loadReports()">
+          <i class="bi bi-arrow-clockwise"></i> REFRESH
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="report-table-wrap">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Room</th>
+          <th>Category</th>
+          <th>Severity</th>
+          <th>Student</th>
+          <th>Report Time</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="reportRows">
+        <tr><td colspan="8" class="empty-state">Loading reports...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title font-bungee">REPORT DETAIL</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="reportDetail"></div>
+      <div class="modal-footer flex-wrap">
+        <button type="button" class="btn btn-outline-dark fw-bold" onclick="viewCurrentPdf()">
+          <i class="bi bi-file-earmark-pdf"></i> VIEW PDF
+        </button>
+        <button type="button" class="btn btn-danger fw-bold" onclick="downloadCurrentPdf()">
+          <i class="bi bi-download"></i> DOWNLOAD PDF
+        </button>
+        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">CLOSE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let reports = [];
+let currentReport = null;
+
+function norm(v){ return String(v ?? '').trim(); }
+function statusClass(v){
+  const s = norm(v).toLowerCase();
+  if (s === 'resolved') return 'status-resolved';
+  if (s === 'in progress' || s === 'in_progress') return 'status-in-progress';
+  return 'status-pending';
+}
+function severityClass(v){
+  const s = norm(v).toLowerCase();
+  if (s === 'high') return 'sev-high';
+  if (s === 'medium') return 'sev-medium';
+  return 'sev-low';
+}
+function formatDate(v){
+  if(!v) return '-';
+  const d = new Date(v);
+  return isNaN(d) ? v : d.toLocaleString('en-MY', {
+    year:'numeric', month:'short', day:'2-digit',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+function escapeHtml(v){
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function getImages(r){
+  if(Array.isArray(r.image_urls)) return r.image_urls.filter(Boolean);
+  if(typeof r.image_urls === 'string'){
+    try{
+      const parsed = JSON.parse(r.image_urls);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    }catch(e){
+      return r.image_urls ? [r.image_urls] : [];
+    }
+  }
+  return [];
+}
+
+async function loadReports(){
+  const tbody = document.getElementById('reportRows');
+  tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Loading reports...</td></tr>';
+
+  if(typeof window.supabaseClient === 'undefined' || !window.supabaseClient){
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state text-danger">Supabase client not available.</td></tr>';
+    return;
+  }
+
+  const { data, error } = await window.supabaseClient
+    .from('maintenance_reports')
+    .select('*')
+    .order('report_time', { ascending:false });
+
+  if(error){
+    console.error(error);
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state text-danger">${escapeHtml(error.message)}</td></tr>`;
+    return;
+  }
+
+  reports = data || [];
+  renderReports();
+}
+
+function renderReports(){
+  const q = norm(document.getElementById('searchInput').value).toLowerCase();
+  const sf = norm(document.getElementById('statusFilter').value).toLowerCase();
+  const sevf = norm(document.getElementById('severityFilter').value).toLowerCase();
+
+  const filtered = reports.filter(r => {
+    const hay = [
+      r.reference_id, r.booking_id, r.student_id, r.student_name,
+      r.room, r.category, r.severity, r.description, r.status, r.admin_note
+    ].map(norm).join(' ').toLowerCase();
+
+    const rs = norm(r.status).toLowerCase().replace('_',' ');
+    const rv = norm(r.severity).toLowerCase();
+
+    return (!q || hay.includes(q)) &&
+           (!sf || rs === sf) &&
+           (!sevf || rv === sevf);
+  });
+
+  const tbody = document.getElementById('reportRows');
+
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No maintenance reports found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td><b>${escapeHtml(r.reference_id || r.id || '-')}</b></td>
+      <td>${escapeHtml(r.room || '-')}</td>
+      <td>${escapeHtml(r.category || '-')}</td>
+      <td><span class="badge-severity ${severityClass(r.severity)}">${escapeHtml(r.severity || 'LOW')}</span></td>
+      <td>${escapeHtml(r.student_name || r.student_id || '-')}</td>
+      <td>${escapeHtml(formatDate(r.report_time))}</td>
+      <td><span class="badge-status ${statusClass(r.status)}">${escapeHtml(r.status || 'PENDING')}</span></td>
+      <td>
+        <button class="btn btn-sm btn-primary action-btn" onclick="openReport('${r.id}')">
+          <i class="bi bi-eye"></i> View
+        </button>
+        <button class="btn btn-sm btn-outline-danger action-btn" onclick="downloadReportById('${r.id}')">
+          <i class="bi bi-file-earmark-pdf"></i> PDF
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openReport(id){
+  currentReport = reports.find(r => String(r.id) === String(id));
+  if(!currentReport) return;
+
+  const r = currentReport;
+  const images = getImages(r);
+
+  document.getElementById('reportDetail').innerHTML = `
+    <div class="row g-3">
+      <div class="col-md-6"><div class="detail-label">Reference ID</div><div class="detail-value">${escapeHtml(r.reference_id || '-')}</div></div>
+      <div class="col-md-6"><div class="detail-label">Booking ID</div><div class="detail-value">${escapeHtml(r.booking_id || '-')}</div></div>
+      <div class="col-md-6"><div class="detail-label">Student</div><div class="detail-value">${escapeHtml(r.student_name || '-')}</div></div>
+      <div class="col-md-6"><div class="detail-label">Student ID</div><div class="detail-value">${escapeHtml(r.student_id || '-')}</div></div>
+      <div class="col-md-6"><div class="detail-label">Room</div><div class="detail-value">${escapeHtml(r.room || '-')}</div></div>
+      <div class="col-md-6"><div class="detail-label">Category</div><div class="detail-value">${escapeHtml(r.category || '-')}</div></div>
+      <div class="col-md-6"><div class="detail-label">Severity</div><div class="detail-value">${escapeHtml(r.severity || '-')}</div></div>
+      <div class="col-md-6"><div class="detail-label">Report Time</div><div class="detail-value">${escapeHtml(formatDate(r.report_time))}</div></div>
+
+      <div class="col-12">
+        <div class="detail-label">Description</div>
+        <div class="detail-value border p-3 bg-light">${escapeHtml(r.description || '-')}</div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="detail-label mb-1">Status</label>
+        <select id="detailStatus" class="form-select border-2 border-dark">
+          <option value="PENDING" ${norm(r.status).toUpperCase()==='PENDING'?'selected':''}>PENDING</option>
+          <option value="IN PROGRESS" ${['IN PROGRESS','IN_PROGRESS'].includes(norm(r.status).toUpperCase())?'selected':''}>IN PROGRESS</option>
+          <option value="RESOLVED" ${norm(r.status).toUpperCase()==='RESOLVED'?'selected':''}>RESOLVED</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="detail-label mb-1">Admin Note</label>
+        <textarea id="detailAdminNote" class="form-control border-2 border-dark" rows="3">${escapeHtml(r.admin_note || '')}</textarea>
+      </div>
+
+      <div class="col-12">
+        <button class="btn btn-success fw-bold" onclick="saveAdminUpdate()">
+          <i class="bi bi-save"></i> SAVE UPDATE
+        </button>
+      </div>
+
+      <div class="col-12">
+        <div class="detail-label mb-2">Uploaded Images</div>
+        <div class="image-grid">
+          ${images.length
+            ? images.map(url => `<a href="${escapeHtml(url)}" target="_blank"><img src="${escapeHtml(url)}" alt="Report image"></a>`).join('')
+            : '<span class="text-muted">No image uploaded.</span>'}
+        </div>
+      </div>
+    </div>
+  `;
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('reportModal')).show();
+}
+
+async function saveAdminUpdate(){
+  if(!currentReport) return;
+
+  const status = document.getElementById('detailStatus').value;
+  const admin_note = document.getElementById('detailAdminNote').value.trim();
+
+  const { error } = await window.supabaseClient
+    .from('maintenance_reports')
+    .update({ status, admin_note })
+    .eq('id', currentReport.id);
+
+  if(error){
+    alert('Failed to update report: ' + error.message);
+    return;
+  }
+
+  currentReport.status = status;
+  currentReport.admin_note = admin_note;
+  alert('Report updated successfully.');
+  await loadReports();
+  openReport(currentReport.id);
+}
+
+
+async function loadPdfLogo(){
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        resolve({
+          dataUrl: canvas.toDataURL('image/png'),
+          width: canvas.width,
+          height: canvas.height
+        });
+      }catch(err){
+        console.warn('Logo conversion failed:', err);
+        resolve(null);
+      }
+    };
+    img.onerror = () => {
+      console.warn('Logo TVETMARA tidak dapat dimuatkan dari ../logo_tvetmara.png');
+      resolve(null);
+    };
+    img.src = '../logo_tvetmara.png';
+  });
+}
+
+async function createReportPdf(report){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+
+  const margin = 18;
+  const maxWidth = 174;
+  let y = 18;
+
+  // Logo TVETMARA Besut di tengah bahagian atas PDF
+  const logo = await loadPdfLogo();
+  if(logo && logo.dataUrl){
+    const maxLogoW = 38;
+    const maxLogoH = 28;
+    const ratio = Math.min(maxLogoW / logo.width, maxLogoH / logo.height);
+    const logoW = logo.width * ratio;
+    const logoH = logo.height * ratio;
+    const logoX = (210 - logoW) / 2;
+
+    doc.addImage(logo.dataUrl, 'PNG', logoX, y, logoW, logoH);
+    y += logoH + 6;
+  }
+
+  function title(text){
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(18);
+    doc.text(text, 105, y, { align:'center' });
+    y += 12;
+  }
+  function row(label, value){
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.text(label, margin, y);
+
+    doc.setFont('helvetica','normal');
+    const lines = doc.splitTextToSize(String(value ?? '-'), 122);
+    doc.text(lines, margin + 48, y);
+
+    y += Math.max(7, lines.length * 5 + 2);
+    if(y > 275){
+      doc.addPage();
+      y = 20;
+    }
+  }
+  function section(label, value){
+    y += 3;
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.text(label, margin, y);
+    y += 6;
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(String(value ?? '-'), maxWidth);
+    doc.text(lines, margin, y);
+    y += lines.length * 5 + 4;
+
+    if(y > 275){
+      doc.addPage();
+      y = 20;
+    }
+  }
+
+  title('MyTVETMARA - Maintenance Report');
+
+  row('Reference ID', report.reference_id || report.id || '-');
+  row('Booking ID', report.booking_id || '-');
+  row('Student Name', report.student_name || '-');
+  row('Student ID', report.student_id || '-');
+  row('Room', report.room || '-');
+  row('Category', report.category || '-');
+  row('Severity', report.severity || '-');
+  row('Status', report.status || 'PENDING');
+  row('Report Time', formatDate(report.report_time));
+
+  section('Description', report.description || '-');
+  section('Admin Note', report.admin_note || '-');
+
+  const images = getImages(report);
+  if(images.length){
+    section('Image References', images.join('\n'));
+  }
+
+  doc.setFontSize(8);
+  doc.setTextColor(100);
+  doc.text('Generated from MyTVETMARA e-Booking Admin System', margin, 290);
+
+  return doc;
+}
+
+async function viewPdf(report){
+  const doc = await createReportPdf(report);
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+async function downloadPdf(report){
+  const doc = await createReportPdf(report);
+  const ref = (report.reference_id || report.id || 'report')
+    .toString().replace(/[^a-zA-Z0-9_-]/g,'_');
+  doc.save(`maintenance_${ref}.pdf`);
+}
+
+async function viewCurrentPdf(){
+  if(currentReport) await viewPdf(currentReport);
+}
+async function downloadCurrentPdf(){
+  if(currentReport) await downloadPdf(currentReport);
+}
+async function downloadReportById(id){
+  const r = reports.find(x => String(x.id) === String(id));
+  if(r) await downloadPdf(r);
+}
+
+document.getElementById('searchInput').addEventListener('input', renderReports);
+document.getElementById('statusFilter').addEventListener('change', renderReports);
+document.getElementById('severityFilter').addEventListener('change', renderReports);
+
+document.addEventListener('DOMContentLoaded', loadReports);
+</script>
+</body>
+</html>

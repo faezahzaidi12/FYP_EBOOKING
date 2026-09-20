@@ -5,68 +5,114 @@
     <title>SIGN UP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/USER_PAGE/style_index.css">
+    <link rel="stylesheet" href="style_index.css">
 
-    <!-- REQUIRED: Supabase JS SDK. Must load before your own script below. -->
+    <!-- Supabase SDK + shared project config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+
+    <style>
+    body {
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100vh;
+    }
+
+    .signup-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 10;
+        margin: 20px auto;
+        width: 100%;
+        max-width: 450px;
+    }
+
+    .roblox-cardR {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+    }
+
+    .signup-wrapper .logo-frame {
+        position: relative;
+        z-index: 11;
+        width: 220px !important;
+        max-width: 220px !important;
+        margin: 0 auto !important;
+    }
+
+    #myVideo {
+        position: fixed;
+    }
+    </style>
 </head>
 <body>
-     <!-- Video Background -->
+    <!-- Video Background -->
     <video autoplay muted loop id="myVideo">
         <source src="mainBG.mp4" type="video/mp4">
     </video>
     <div class="video-overlay"></div>
-    <div class="roblox-cardR text-uppercase">
-        <h2 class="font-bungee text-center mb-4 text-dark">SIGN UP</h2>
-        <div class="inner-container">
-            <label class="fw-bold small">USERNAME :</label>
-            <input type="text" id="username" class="form-control mb-3" placeholder="FULLNAME">
 
-            <!-- IC Label dengan contoh kelabu halus -->
-            <label class="fw-bold small">
-                IC NUMBER :
-                <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;">(example: 123456-12-1234)</span>
-            </label>
-            <!-- Auto-format sempang menggunakan fungsi formatIC -->
-            <input type="text" id="icNumber" class="form-control mb-3" placeholder="123456-12-1234" maxlength="14" oninput="formatIC(this)">
-
-            <div class="mb-3">
-                <label class="fw-bold small">COURSE:</label>
-                <select id="mCourse" class="form-select border-3 border-dark fw-bold text-center">
-                    <option value="" selected disabled hidden></option> 
-                    <option value="DFK">DIPLOMA IN TECHNOLOGY COMPUTER</option>
-                    <option value="DGA">DIPLOMA IN TECHNOLOGY AUTOMOTIVE</option>
-                    <option value="ITW">DIPLOMA IN WELDING COMPETENCY</option>
-                    <option value="PPU">DIPLOMA IN PPU</option>
-                    <option value="DCG">DIPLOMA IN WELDING COMPETENCY</option>
-                    <option value="SLR">CERTIFICATE IN MECHANICAL ENGINEERING TECHNOLOGY</option>
-                </select>
+    <div class="signup-wrapper">
+        <div class="roblox-cardR text-uppercase">
+            <div class="logo-frame">
+                <img src="logo_tvetmara.png" style="width: 100%;">
             </div>
 
-            <label class="fw-bold small">EMAIL :</label>
-            <input type="email" id="email" class="form-control mb-3" placeholder="EMAIL">
+            <div class="inner-container">
+                <h2 class="font-bungee text-center mb-4">SIGN UP</h2>
 
-            <!-- Password Label dengan contoh kelabu halus -->
-            <label class="fw-bold small">
-                CREATE PASSWORD :
-                <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;"><p>(minimum 8 characters)</p></span>
-            </label>
-            <input type="password" id="password" class="form-control mb-3" placeholder="PASSWORD">
+                <label class="fw-bold small">USERNAME :</label>
+                <input type="text" id="username" class="form-control mb-3" placeholder="FULLNAME">
+
+                <label class="fw-bold small">
+                    IC NUMBER :
+                    <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;">
+                        (example: 123456-12-1234)
+                    </span>
+                </label>
+                <input type="text" id="icNumber" class="form-control mb-3"
+                       placeholder="123456-12-1234" maxlength="14" oninput="formatIC(this)">
+
+                <div class="mb-3">
+                    <label class="fw-bold small">COURSE:</label>
+                    <select id="mCourse" class="form-select border-3 border-dark text-center">
+                        <option value="" selected disabled hidden></option>
+                        <option value="DFK">DIPLOMA IN COMPUTER TECHNOLOGY(Cloud Computing)</option>
+                        <option value="DGA">DIPLOMA IN TECHNOLOGY AUTOMOTIVE</option>
+                        <option value="ITW">DIPLOMA IN WELDING COMPETENCY</option>
+                        <option value="PPU">DIPLOMA IN REFRIGERATION AND AIR CONDITIONING TECHNOLOGY</option>
+                        <option value="DCG">DIPLOMA IN ELECTRICAL COMPETENCY (INDUSTRIAL)</option>
+                        <option value="SLR">CERTIFICATE IN MECHANICAL ENGINEERING TECHNOLOGY</option>
+                    </select>
+                </div>
+
+                <label class="fw-bold small">EMAIL :</label>
+                <input type="email" id="email" class="form-control mb-3" placeholder="EMAIL">
+
+                <label class="fw-bold small">
+                    CREATE PASSWORD :
+                    <span class="text-muted fw-normal" style="font-size: 0.8rem; text-transform: none;">
+                        <p>(minimum 8 characters)</p>
+                    </span>
+                </label>
+                <input type="password" id="password" class="form-control mb-3" placeholder="PASSWORD">
+            </div>
+
+            <button class="btn btn-roblox btn-success w-100 py-2 fs-5 mb-3"
+                    id="registerBtn" onclick="registerUser()">DONE</button>
+            <button class="btn btn-link w-100 text-danger fw-bold text-decoration-none"
+                    onclick="window.location.href='index.html'">CANCEL</button>
         </div>
-
-        <button class="btn btn-roblox btn-success w-100 py-2 fs-5 mb-3" onclick="registerUser()">DONE</button>
-        <button class="btn btn-link w-100 text-danger fw-bold text-decoration-none" onclick="window.location.href='index.html'">CANCEL</button>
     </div>
 
     <script>
-        // Masukkan URL dan Kunci Supabase Projek Awak
-        const supabaseUrl = 'https://doyyrhhscdpchuvpancq.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A';
+        const _supabase = window.supabaseClient;
 
-        // Inisialisasi sambungan
-        const _supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
-
-        // FUNGSI AUTO-FORMAT IC (000000-00-0000)
         function formatIC(input) {
             let value = input.value.replace(/\D/g, '');
 
@@ -82,50 +128,86 @@
         async function registerUser() {
             const username = document.getElementById('username').value.trim();
             const icNumber = document.getElementById('icNumber').value.trim();
-            const course = document.getElementById('mCourse').value; // DIKEMASKINI: Ditukar dari mSubject ke mCourse! [33]
+            const course = document.getElementById('mCourse').value;
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const registerBtn = document.getElementById('registerBtn');
 
-            // 1. Pastikan semua ruangan diisi
+            if (!_supabase) {
+                alert('SUPABASE CLIENT NOT AVAILABLE. CHECK supabase-config.js');
+                return;
+            }
+
             if (!username || !icNumber || !course || !email || !password) {
                 alert("PLEASE FILL ALL FIELDS!");
                 return;
             }
 
-            // 2. Sekatan IC mesti cukup 12 angka (14 aksara termasuk 2 sempang)
-            if (icNumber.length < 14) {
+            if (icNumber.length !== 14) {
                 alert("PLEASE ENTER A VALID 12-DIGIT IC NUMBER!");
                 return;
             }
 
-            // 3. Sekatan Kata Laluan Minimum 8 Aksara
             if (password.length < 8) {
                 alert("PASSWORD MUST BE AT LEAST 8 CHARACTERS LONG!");
                 return;
             }
 
-            // A. DAFTAR MASUK KE SUPABASE AUTH
-            const { data, error } = await _supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        display_name: username, // Memaparkan di ruangan "Display Name" Supabase Auth [1.1.3]
-                        full_name: username,
-                        ic_number: icNumber,
-                        subject: course
-                    }
-                }
-            });
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'CREATING...';
 
-            if (error) {
-                alert("Pendaftaran Gagal: " + error.message);
-                console.error(error);
-            } else {
-                alert('Account Created Successfully!');
-                window.location.href = 'index.html'; // Bawa semula ke halaman login
+            try {
+                // 1) Create Supabase Auth account
+                const { data, error } = await _supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            display_name: username,
+                            full_name: username,
+                            fullname: username,
+                            username: username,
+                            ic_number: icNumber,
+                            ic: icNumber,
+                            course: course,
+                            subject: course,
+                            status: 'STUDENT'
+                        }
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (!data || !data.user) {
+                    throw new Error('User account was not returned by Supabase Auth.');
+                }
+
+                const user = data.user;
+
+                // 2) public.profiles is created automatically by the project's
+                // Auth -> profiles database trigger. Do not insert it again here.
+                // The metadata supplied during signUp is available to that trigger.
+
+                alert('ACCOUNT CREATED SUCCESSFULLY!');
+                window.location.href = 'index.html';
+
+            } catch (err) {
+                console.error('Registration error:', err);
+                alert('PENDAFTARAN GAGAL: ' + (err.message || err));
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'DONE';
             }
         }
+    </script>
+
+    <script>
+        const video = document.getElementById('myVideo');
+        video.addEventListener('loadeddata', function() {
+            video.classList.add('loaded');
+        });
     </script>
 </body>
 </html>

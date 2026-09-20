@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
+    
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOG IN</title>
     <!-- Bootstrap and Font Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Link ke style_index.css yang berada di dalam folder yang sama -->
-    <link rel="stylesheet" href="/USER_PAGE/style_index.css">
+    <!-- Link ke style_index.css yang berada di dalam folder yang sama (USER_PAGE) -->
+    <link rel="stylesheet" href="style_index.css">
 
     <!-- REQUIRED: Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -29,13 +31,13 @@
         <div class="inner-container">
             <h2 class="font-bungee mb-1">LOG IN</h2>
             <p class="small text-muted mb-4 fw-bold">MYTVETMARA e-BOOKING</p>
-            <div class="text-start mb-3">
+           <div class="text-start mb-3">
                 <label class="fw-bold small">EMAIL :</label>
-                <input type="email" id="loginEmail" class="form-control" placeholder="EMAIL">
+                <input type="email" id="loginEmail" class="form-control" placeholder="EMAIL" autocomplete="off" value="">
             </div>
             <div class="text-start mb-4">
                 <label class="fw-bold small">PASSWORD:</label>
-                <input type="password" id="loginPass" class="form-control" placeholder="PASSWORD">
+                <input type="password" id="loginPass" class="form-control" placeholder="PASSWORD" autocomplete="new-password" value="">
             </div>
 
             <!-- Butang LET'S GO memanggil fungsi doLogin() -->
@@ -76,9 +78,10 @@
     // ==========================================
     // 2. SKRIP SUPABASE & LOG MASUK / LOGIN
     // ==========================================
-    const _supabase = window.supabaseClient || (window.supabase ? window.supabase.createClient('https://doyyrhhscdpchuvpancq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A') : null);
+    const _supabase = window.supabaseClient || null;
 
     // FUNGSI LOG MASUK UTAMA
+    // Semua akaun termasuk ADMIN mesti authenticate melalui Supabase Auth.
     async function doLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPass').value;
@@ -88,64 +91,51 @@
             return;
         }
 
-        // =========================================================
-        //  1. TETAPKAN EMEL & PASSWORD KHAS ADMIN DI SINI
-        // =========================================================
-        const ADMIN_EMAIL = "admin@gmail.com"; 
-        const ADMIN_PASS  = "admin123";       
-
-        // SEMAKAN ADMIN (Terus masuk tanpa perlu Sign Up Supabase)
-        if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASS) {
-            
-            // Simpan maklumat akaun Admin ke LocalStorage
-            const adminData = {
-                id: "admin-001",
-                fullname: "ADMINISTRATOR",
-                username: "ADMIN",
-                email: ADMIN_EMAIL,
-                role: "admin"
-            };
-            localStorage.setItem('userAccount', JSON.stringify(adminData));
-            localStorage.setItem('currentUser', adminData.username);
-            localStorage.setItem('currentUserId', adminData.id);
-
-            alert('Login Successful! Welcome Admin.');
-            window.location.href = '/ADMIN_PAGE/home_admin.html'; // Path ke page admin
-            return; // Hentikan fungsi di sini supaya tidak teruskan ke Supabase
+        if (!_supabase) {
+            alert("Sistem tidak tersedia buat masa ini. Sila cuba lagi sebentar.");
+            console.error("Supabase client tidak berjaya dimulakan. Semak supabase-config.js.");
+            return;
         }
 
-        // =========================================================
-        //  2. JIKA BUKAN ADMIN, LOG IN DENGAN SUPABASE (PELAJAR BIASA)
-        // =========================================================
         const { data, error } = await _supabase.auth.signInWithPassword({
-            email: email,
-            password: password
+            email,
+            password
         });
 
         if (error) {
             alert("Login Gagal: " + error.message);
             console.error(error);
+            return;
+        }
+
+        const user = data.user;
+        const metadata = user.user_metadata || {};
+        const normalizedEmail = (user.email || '').toLowerCase();
+
+        // Admin mesti wujud dalam Supabase Auth.
+        // RLS database juga semak email yang sama, jadi bypass LocalStorage tak lagi cukup.
+        const ADMIN_EMAIL = "admin@gmail.com";
+
+        const userData = {
+            id: user.id,
+            fullname: metadata.fullname || metadata.full_name || metadata.display_name || "NAMA PELAJAR",
+            username: metadata.username || metadata.display_name || (user.email ? user.email.split('@')[0].toUpperCase() : "USER"),
+            ic: metadata.ic || metadata.ic_number || "",
+            email: user.email || "",
+            phone: metadata.phone || metadata.phone_number || "",
+            role: normalizedEmail === ADMIN_EMAIL ? "admin" : "student"
+        };
+
+        // LocalStorage hanya untuk paparan/compatibility lama.
+        // Security sebenar datang daripada Supabase Auth session + RLS.
+        localStorage.setItem('userAccount', JSON.stringify(userData));
+        localStorage.setItem('currentUser', userData.username);
+        localStorage.setItem('currentUserId', user.id);
+
+        if (normalizedEmail === ADMIN_EMAIL) {
+            window.location.href = 'ADMIN_PAGE/home_admin.html';
         } else {
-            const user = data.user;
-            const metadata = user.user_metadata || {};
-
-            // Susun maklumat pengguna daripada Supabase metadata
-            const userData = {
-                id: user.id,
-                fullname: metadata.fullname || metadata.full_name || metadata.display_name || "NAMA PELAJAR",
-                username: metadata.username || metadata.display_name || user.email.split('@')[0].toUpperCase(),
-                ic: metadata.ic || metadata.ic_number || "000000-00-0000",
-                email: user.email,
-                phone: metadata.phone || metadata.phone_number || "-"
-            };
-
-            // Simpan ke LocalStorage
-            localStorage.setItem('userAccount', JSON.stringify(userData));
-            localStorage.setItem('currentUser', userData.username);
-            localStorage.setItem('currentUserId', user.id);
-            
-            alert('Login Successful! Welcome back.');
-            window.location.href = 'home.html'; // Page untuk pelajar biasa
+            window.location.href = 'home.html';
         }
     }
 </script>
@@ -179,5 +169,16 @@
 
     tryLoad();
 })();
+
+// Kosongkan petak email & password setiap kali page dibuka
+    window.addEventListener('pageshow', function () {
+        setTimeout(() => {
+            const emailInput = document.getElementById('loginEmail');
+            const passInput = document.getElementById('loginPass');
+            if (emailInput) emailInput.value = '';
+            if (passInput) passInput.value = '';
+        }, 50);
+    });
 </script>
+</body>
 </html>

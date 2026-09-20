@@ -9,12 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- Link ke fail CSS -->
-    <link rel="stylesheet" href="/USER_PAGE/style_index.css">
+    <link rel="stylesheet" href="../style_index.css">
     <link rel="stylesheet" href="style_admin.css">
+    <script src="../auth-guard.js"></script>
 
     <!-- REQUIRED: Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./supabase-config.js"></script>
+    <script src="../supabase-config.js"></script>
 </head>
 <body style="background-color: #e3e3e0;">
 
@@ -98,7 +99,10 @@
                                 <p class="mb-1">FULL NAME: <br><span class="text-primary" id="mFullname">---</span></p>
                                 <p class="mb-1">IC NUMBER: <br><span class="text-primary" id="mIC">---</span></p>
                                 <p class="mb-1">EMAIL: <br><span class="text-primary" id="mEmail">---</span></p>
-                                <p class="mb-0">PHONE: <br><span class="text-primary" id="mPhone">---</span></p>
+                                <p class="mb-1">PHONE: <br><span class="text-primary" id="mPhone">---</span></p>
+                                <p class="mb-0 text-muted" style="font-size:.72rem;">
+                                    Data diambil terus daripada table <b>profiles</b>.
+                                </p>
                             </div>
                         </div>
                         <!-- Rekod Tempahan -->
@@ -132,15 +136,42 @@
         // =========================================================
         // 1. INITIALIZE SUPABASE CLIENT
         // =========================================================
-        const _supabase = window.supabaseClient || (window.supabase ? window.supabase.createClient('https://doyyrhhscdpchuvpancq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXlyaGhzY2RwY2h1dnBhbmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MjkzNjksImV4cCI6MjA5NTIwNTM2OX0.liPsexqKQTnZe5UpB1DW5zpZ12I05REflxYaNbf6l8A') : null);
+        const _supabase = window.supabaseClient || null;
 
         let globalUsersData = [];
+
+        const ADMIN_EMAIL = "admin@gmail.com";
+
+        async function requireAdminSession() {
+            if (!_supabase) {
+                alert('Supabase client tidak tersedia.');
+                window.location.href = '../index.html';
+                return false;
+            }
+
+            const { data, error } = await _supabase.auth.getUser();
+            const user = data && data.user ? data.user : null;
+
+            if (error || !user || (user.email || '').toLowerCase() !== ADMIN_EMAIL) {
+                alert('ADMIN ACCESS REQUIRED.');
+                await _supabase.auth.signOut().catch(() => {});
+                window.location.href = '../index.html';
+                return false;
+            }
+
+            return true;
+        }
 
         // =========================================================
         // 2. FUNGSI LOAD DATA DARI DATABASE SUPABASE
         // =========================================================
         async function loadUserTable() {
             const tbody = document.querySelector('#userTable tbody');
+
+            if (!_supabase) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">SUPABASE CLIENT NOT AVAILABLE</td></tr>`;
+                return;
+            }
 
             try {
                 // A. Tarik data profil pengguna dari jadual 'profiles'
@@ -166,12 +197,13 @@
 
                 // C. Jika tiada profil langsung dalam jadual 'profiles', kita kumpul pengguna dari jadual 'bookings'
                 if (!profiles || profiles.length === 0) {
-                    const uniqueEmails = [...new Set(bookings.map(b => b.email || b.user_email))].filter(Boolean);
-                    profiles = uniqueEmails.map((email, idx) => ({
-                        id: email,
-                        fullname: email.split('@')[0].toUpperCase(),
-                        username: email.split('@')[0].toUpperCase(),
-                        email: email,
+                    const uniqueBookedBy = [...new Set(bookings.map(b => b.booked_by).filter(Boolean))];
+                    profiles = uniqueBookedBy.map((bookedBy, idx) => ({
+                        id: bookedBy,
+                        fullname: String(bookedBy),
+                        username: String(bookedBy),
+                        display_name: String(bookedBy),
+                        email: "",
                         ic: "-",
                         phone: "-"
                     }));
@@ -181,25 +213,35 @@
                 globalUsersData = profiles.map(user => {
                     const userEmail = user.email || "";
                     const userId = user.id || "";
+                    const displayUser = (
+                        user.username ||
+                        user.display_name ||
+                        user.fullname ||
+                        user.full_name ||
+                        (userEmail ? userEmail.split('@')[0] : "")
+                    ).toString();
 
-                    // Cari rekod tempahan milik pengguna ini
-                    const userHistory = bookings.filter(b => 
-                        (b.email && b.email.toLowerCase() === userEmail.toLowerCase()) || 
-                        (b.user_id && b.user_id === userId)
+                    // Cari rekod tempahan milik pengguna ini.
+                    // Struktur project sekarang simpan pemilik booking dalam column `booked_by`.
+                    const userHistory = bookings.filter(b =>
+                        String(b.booked_by || '').trim().toLowerCase() ===
+                        displayUser.trim().toLowerCase()
                     );
 
                     return {
-                        id: user.id || user.email,
-                        name: user.fullname || user.full_name || "PELAJAR",
-                        user: user.username || user.display_name || userEmail.split('@')[0].toUpperCase(),
-                        email: userEmail,
-                        ic: user.ic || user.ic_number || "-",
-                        phone: user.phone || user.phone_number || "-",
+                        id: user.id || user.email || displayUser,
+                        name: user.fullname || user.full_name || user.display_name || displayUser || "PELAJAR",
+                        user: displayUser || "PELAJAR",
+                        email: user.email || "NOT STORED",
+                        ic: user.ic_number || user.ic || "NOT STORED",
+                        phone: user.phone || user.phone_number || "NOT STORED",
                         status: user.status || "STUDENT",
                         history: userHistory.map(h => ({
                             room: h.room_name || h.room || "ROOM",
                             date: h.booking_date || h.date || "-",
-                            time: h.time_slot || h.time || "-",
+                            time: (h.start_time && h.end_time)
+                                ? `${String(h.start_time).slice(0,5)} - ${String(h.end_time).slice(0,5)}`
+                                : (h.time_slot || h.time || "-"),
                             stat: (h.status || "SUCCESS").toUpperCase()
                         }))
                     };
@@ -274,7 +316,13 @@
                         <td>${h.room}</td>
                         <td>${h.date}</td>
                         <td>${h.time}</td>
-                        <td><span class="status-badge ${h.stat === 'SUCCESS' || h.stat === 'APPROVED' ? 'bg-success text-white' : 'bg-danger text-white'}">${h.stat}</span></td>
+                        <td><span class="status-badge ${
+    h.stat === 'CANCELLED' || h.stat === 'TERMINATED'
+        ? 'bg-danger text-white'
+        : h.stat === 'PENDING'
+            ? 'bg-warning text-dark'
+            : 'bg-success text-white'
+}">${h.stat}</span></td>
                     </tr>
                 `).join('');
             }
@@ -283,7 +331,10 @@
         }
 
         // Jalankan fungsi semasa page dibuka
-        window.onload = loadUserTable;
+        window.onload = async () => {
+            const ok = await requireAdminSession();
+            if (ok) await loadUserTable();
+        };
     </script>
 </body>
 </html>
